@@ -100,7 +100,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     @Override
     public boolean placeGrass() {
         // If the whole map is full of animals, the plant has no place to grow
-        if(animalMap.size()>=initialParameters.field){
+        if(animalMap.size()>=initialParameters.allMapField){
             return true;
         }
         if(this.grassOfJungle - getNumberOfAnimals(true)>0){
@@ -118,10 +118,10 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             grassOfJungle -= 1;
         }
         if(this.grassOfStep - getNumberOfAnimals(false)>0){
-            Vector2d a = initialParameters.getRandomNotJunglePosition();
+            Vector2d a = initialParameters.getRandomStepPosition();
             int cnt = 0;
             while (!canPutGrass(a)){
-                a = initialParameters.getRandomNotJunglePosition();
+                a = initialParameters.getRandomStepPosition();
                 cnt += 1;
 
 

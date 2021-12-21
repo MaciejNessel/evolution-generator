@@ -1,8 +1,9 @@
 
+
 public class World {
     public static void main(String[] args) {
-        InitialParameters parameters = new InitialParameters(40, 40,  0.5,
-                5, 150, 1, 2);
+
+        InitialParameters parameters = new InitialParameters();
 
         IWorldMap map = new AbstractWorldMap(parameters, false, false);
         IEngine engine = new SimulationEngine(parameters, map);
