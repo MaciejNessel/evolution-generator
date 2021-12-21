@@ -2,12 +2,6 @@ import java.util.ArrayList;
 
 public interface IWorldMap {
 
-    /**checks if it is possible to move (or place) an animal in a given position*/
-    boolean canPutAnimal(Vector2d position);
-
-    /**checks if it is possible to place a grass in a given position*/
-    boolean canPutGrass(Vector2d position);
-
     /**places animal on the map*/
     void placeAnimal(Animal animal, ArrayList<IPositionChangeObserver> observers);
 

@@ -3,14 +3,15 @@ import java.util.*;
 public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
     // Map config
-    public final boolean wallIsFence;
     public final InitialParameters initialParameters;
+    public final boolean wallIsFence;
     private final boolean isMagical;
     private int grassOfStep;
     private int grassOfJungle;
     private int cntOfMagicalUse = 0;
-    // Informations about objects on the map
-    private  Map<Vector2d, ArrayList<Animal>> animalMap = new TreeMap<>(new Comparator<Vector2d>(){
+
+    // Information about objects on the map
+    private final Map<Vector2d, ArrayList<Animal>> animalMap = new TreeMap<>(new Comparator<Vector2d>(){
         @Override
         public int compare(Vector2d pos1, Vector2d pos2){
             if (pos1.x > pos2.x) return 1;
@@ -18,14 +19,14 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             return Integer.compare(pos1.y, pos2.y);
         }
     });
-    private  Map<Vector2d, Grass> grassMap = new TreeMap<>(new Comparator<Vector2d>(){
+    private final Map<Vector2d, Grass> grassMap = new TreeMap<>(new Comparator<Vector2d>(){
         @Override
         public int compare(Vector2d pos1, Vector2d pos2){
             if (pos1.x > pos2.x) return 1;
             if (pos1.x < pos2.x) return -1;
             return Integer.compare(pos1.y, pos2.y);
         }});
-    private ArrayList<Animal> animalsList = new ArrayList<>();
+    private final ArrayList<Animal> animalsList = new ArrayList<>();
 
     public AbstractWorldMap(InitialParameters config, boolean wallIsFence, boolean isMagical){
         this.initialParameters = config;
@@ -36,39 +37,14 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     }
 
     @Override
-    public boolean canPutAnimal(Vector2d position) {
-        return !wallIsFence || (position.x <= this.initialParameters.mapWidth && position.y <= this.initialParameters.mapHeight);
-    }
-
-    @Override
-    public boolean canPutGrass(Vector2d position) {
-        if(grassAt(position)==null && (animalsAt(position)==null || animalsAt(position).size()==0)){
-            return true;
-        }
-        return false;
-    }
-    private int getNumberOfAnimals(boolean isJungle){
-        int cnt = 0;
-        for(int i = 0; i<this.initialParameters.mapHeight; i++){
-            for (int j = 0; j<this.initialParameters.mapWidth; j++){
-                if((initialParameters.isPositionInJungle(new Vector2d(j,i)) && isJungle ) || !initialParameters.isPositionInJungle(new Vector2d(j,i)) && !isJungle){
-                    if(animalsAt(new Vector2d(j,i))!=null && animalsAt(new Vector2d(j,i)).size()>0){
-                        cnt += 1;
-                    }
-                }
-            }
-        }
-        return cnt;
-    }
-    @Override
     public void placeAnimal(Animal animal, ArrayList<IPositionChangeObserver> observers) {
         Vector2d position = animal.getPosition();
         if(canPutAnimal(position)){
-            ArrayList<Animal> animalListByPosition = animalMap.get(position);
-            if(animalListByPosition == null) {
-                animalListByPosition = new ArrayList<>();
-                animalListByPosition.add(animal);
-                animalMap.put(position, animalListByPosition);
+            ArrayList<Animal> animals = animalMap.get(position);
+            if(animals == null) {
+                animals = new ArrayList<>();
+                animals.add(animal);
+                animalMap.put(position, animals);
                 animalsList.add(animal);
                 for(IPositionChangeObserver observer : observers){
                     animal.addObserver(observer);
@@ -80,52 +56,27 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             }
         }
     }
-    private void placeAnimalsMagic(ArrayList<Animal> animals){
-        System.out.println(this);
-        ArrayList<Animal> animalsToAdd = new ArrayList<>();
-        for(Animal animal : animals){
-            Vector2d pos = initialParameters.getRandomPosition();
-            while (!canPutAnimal(pos)){
-                pos = initialParameters.getRandomPosition();
-            }
-            Animal an = new Animal(animal, animal, initialParameters);
-            an.changePosition(pos);
-            animalsToAdd.add(an);
-        }
-        for(Animal a : animalsToAdd){
-            placeAnimal(a, a.observerList);
-        }
-        System.out.println(this);
-    }
+
     @Override
     public boolean placeGrass() {
         // If the whole map is full of animals, the plant has no place to grow
         if(animalMap.size()>=initialParameters.allMapField){
             return true;
         }
-        if(this.grassOfJungle - getNumberOfAnimals(true)>0){
-            int cnt = 0;
+        if(this.grassOfJungle - getNumberOfOccupiedFields(true)>0){
             Vector2d a = initialParameters.getRandomJunglePosition();
-            while (!canPutGrass(a)){
+            while (canPutGrass(a)){
                 a = initialParameters.getRandomJunglePosition();
-                cnt += 1;
-
-
-
             }
             Grass grass = new Grass(initialParameters.grassEnergyProfit, a);
             grassMap.put(grass.getPosition(), grass);
             grassOfJungle -= 1;
         }
-        if(this.grassOfStep - getNumberOfAnimals(false)>0){
+        if(this.grassOfStep - getNumberOfOccupiedFields(false)>0){
             Vector2d a = initialParameters.getRandomStepPosition();
             int cnt = 0;
-            while (!canPutGrass(a)){
+            while (canPutGrass(a)){
                 a = initialParameters.getRandomStepPosition();
-                cnt += 1;
-
-
-
             }
             Grass grass = new Grass(initialParameters.grassEnergyProfit, a);
             grassMap.put(grass.getPosition(), grass);
@@ -144,26 +95,18 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         return grassMap.get(position);
     }
 
-
     @Override
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, Animal animal) {
         animalMap.get(oldPosition).remove( animal);
         ArrayList<Animal> animals = animalMap.get(newPosition);
         if(animals==null){
-            animals = new ArrayList<Animal>();
+            animals = new ArrayList<>();
             animals.add(animal);
             animalMap.put(newPosition, animals);
         }
         else {
             animals.add(animal);
         }
-    }
-
-    public String toString(){
-        System.out.println("LICZBA ZWIERZĄT: " + animalsList.size());
-        System.out.println("LICZBA TRAW: " + grassMap.size());
-
-        return new MapView( this, initialParameters).toString();
     }
 
     @Override
@@ -182,6 +125,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             animalsList.remove(animal);
         }
         if(animalsList.size() == 5 && isMagical && cntOfMagicalUse < 3){
+            this.cntOfMagicalUse += 1;
             System.out.println("MAGIC..............................");
             placeAnimalsMagic(animalsList);
         }
@@ -244,7 +188,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
                     }
                 }
             }
-    }}
+        }}
 
     @Override
     public void newDay(){
@@ -252,6 +196,54 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             a.newDay();
         }
     }
+
+    @Override
+    public String toString(){
+        System.out.println("LICZBA ZWIERZĄT: " + animalsList.size());
+        System.out.println("LICZBA TRAW: " + grassMap.size());
+        return new MapView( this, initialParameters).toString();
+    }
+
+    // It is possible to place an animal if its position fits on the map (or the map has no walls)
+    private boolean canPutAnimal(Vector2d position) {
+        return !this.wallIsFence || (position.x <= this.initialParameters.mapWidth && position.y <= this.initialParameters.mapHeight);
+    }
+
+    // It is possible to  place grass if there is no grass or animals in the position
+    private boolean canPutGrass(Vector2d position) {
+        return grassAt(position) != null || (animalsAt(position) != null && animalsAt(position).size() != 0);
+    }
+
+    // Number of fields occupied by animals
+    private int getNumberOfOccupiedFields(boolean isJungle){
+        int cnt = 0;
+        for(int i = 0; i<this.initialParameters.mapHeight; i++){
+            for (int j = 0; j<this.initialParameters.mapWidth; j++){
+                if((initialParameters.isPositionInJungle(new Vector2d(j,i)) && isJungle ) || !initialParameters.isPositionInJungle(new Vector2d(j,i)) && !isJungle){
+                    if(animalsAt(new Vector2d(j,i))!=null && animalsAt(new Vector2d(j,i)).size()>0) cnt += 1;
+                }
+            }
+        }
+        return cnt;
+    }
+
+    // If isMagic - we can put 5 animals three times if their number on the map is also 5
+    private void placeAnimalsMagic(ArrayList<Animal> animals){
+        ArrayList<Animal> animalsToAdd = new ArrayList<>();
+        for(Animal animal : animals){
+            Vector2d position = initialParameters.getRandomPosition();
+            while (!canPutAnimal(position)){
+                position = initialParameters.getRandomPosition();
+            }
+            Animal newAnimal = new Animal(animal, animal, initialParameters);
+            newAnimal.changePosition(position);
+            animalsToAdd.add(newAnimal);
+        }
+        for(Animal a : animalsToAdd){
+            placeAnimal(a, a.observerList);
+        }
+    }
+
 
 
 }
