@@ -9,7 +9,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     private int grassOfStep;
     private int grassOfJungle;
     private int cntOfMagicalUse = 0;
-
+    private IPositionChangeObserver app;
     // Information about objects on the map
     private final Map<Vector2d, ArrayList<Animal>> animalMap = new TreeMap<>(new Comparator<Vector2d>(){
         @Override
@@ -28,12 +28,13 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         }});
     private final ArrayList<Animal> animalsList = new ArrayList<>();
 
-    public AbstractWorldMap(InitialParameters config, boolean wallIsFence, boolean isMagical){
+    public AbstractWorldMap(InitialParameters config, boolean wallIsFence, boolean isMagical, IPositionChangeObserver app){
         this.initialParameters = config;
         this.wallIsFence = wallIsFence;
         this.isMagical = isMagical;
         this.grassOfStep = config.stepField;
         this.grassOfJungle = config.jungleField;
+        this.app = app;
     }
 
     @Override
@@ -49,6 +50,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
                 for(IPositionChangeObserver observer : observers){
                     animal.addObserver(observer);
                 }
+                animal.addObserver(app);
             }
             else{
                 animalMap.get(position).add(animal);
@@ -59,11 +61,13 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
     @Override
     public boolean placeGrass() {
+        int numOfAnimalsOnStep = getNumberOfOccupiedFields(false);
+        int numOfAnimalsOnJungle = getNumberOfOccupiedFields(true);
         // If the whole map is full of animals, the plant has no place to grow
-        if(animalMap.size()>=initialParameters.allMapField){
+        if(numOfAnimalsOnStep + numOfAnimalsOnJungle >=initialParameters.allMapField){
             return true;
         }
-        if(this.grassOfJungle - getNumberOfOccupiedFields(true)>0){
+        if(this.grassOfJungle - numOfAnimalsOnJungle>0){
             Vector2d a = initialParameters.getRandomJunglePosition();
             while (canPutGrass(a)){
                 a = initialParameters.getRandomJunglePosition();
@@ -72,7 +76,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             grassMap.put(grass.getPosition(), grass);
             grassOfJungle -= 1;
         }
-        if(this.grassOfStep - getNumberOfOccupiedFields(false)>0){
+        if(this.grassOfStep - numOfAnimalsOnStep>0){
             Vector2d a = initialParameters.getRandomStepPosition();
             int cnt = 0;
             while (canPutGrass(a)){
@@ -144,6 +148,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
     @Override
     public void animalReproduction(ArrayList<IPositionChangeObserver> observers){
+        observers.add(this.app);
         ArrayList<Animal> toReproduce = new ArrayList<>();
         for(Vector2d key : animalMap.keySet()){
             ArrayList<Animal> animalList = animalMap.get(key);
@@ -201,7 +206,8 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     public String toString(){
         System.out.println("LICZBA ZWIERZĄT: " + animalsList.size());
         System.out.println("LICZBA TRAW: " + grassMap.size());
-        return new MapView( this, initialParameters).toString();
+        System.out.println(this.getNumberOfOccupiedFields(false) + ", "+this.getNumberOfOccupiedFields(false));
+        return "";
     }
 
     // It is possible to place an animal if its position fits on the map (or the map has no walls)

@@ -1,3 +1,6 @@
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+
 public class Grass {
     int energyProfit;
     private Vector2d position;
@@ -17,5 +20,8 @@ public class Grass {
 
     public String toString(){
         return "*";
+    }
+    public Circle view(int scale){
+        return new Circle((double) (scale/2), Color.GREENYELLOW);
     }
 }

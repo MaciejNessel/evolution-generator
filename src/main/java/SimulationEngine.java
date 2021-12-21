@@ -5,12 +5,14 @@ public class SimulationEngine implements IEngine{
     InitialParameters initialParameters;
     IWorldMap map;
     ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
-    public SimulationEngine(InitialParameters initialParameters, IWorldMap map){
+    App app;
+    public SimulationEngine(InitialParameters initialParameters, IWorldMap map, App app){
         this.initialParameters = initialParameters;
         this.map = map;
         this.observers.add((IPositionChangeObserver)map);
         this.putFirstAnimalsOnMap(initialParameters.numberOfSpawningAnimals);
         this.map.placeGrass();
+        this.app = app;
     }
 
     private void putFirstAnimalsOnMap(int cnt){
@@ -19,20 +21,25 @@ public class SimulationEngine implements IEngine{
         }
     }
 
-    // Performs operations ordered for each new day (epoch)
-    public void oneDayActivities(){
-        map.newDay();
-        map.removeDeathAnimal();
-        map.moveAnimals();
-        map.eating();
-        map.animalReproduction(observers);
-        map.placeGrass();
-    }
-
     @Override
     public void run() {
-        oneDayActivities();
+        while (true){
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            map.newDay();
+            map.removeDeathAnimal();
+            map.moveAnimals();
+
+            map.eating();
+            map.animalReproduction(observers);
+            map.placeGrass();
+            app.updateMap();
+            System.out.println("x");
+
     }
 
 
-}
+}}

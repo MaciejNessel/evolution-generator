@@ -1,6 +1,6 @@
 {
-  "mapWidth": 10,
-  "mapHeight": 5,
+  "mapWidth": 40,
+  "mapHeight": 40,
   "animalStartEnergy": 150,
   "grassEnergyProfit": 30,
   "dailyEnergyCost": 1,

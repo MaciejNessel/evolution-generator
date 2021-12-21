@@ -1,3 +1,6 @@
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -124,4 +127,8 @@ public class Animal implements IPositionChangeObserver {
         return animalDirection.toString() + animalPosition.toString();
     }
 
+    public Circle view(int scale){
+        Circle circle = new Circle((double) (scale/2), new Color(0.5, 0.3, 0, 1));
+        return circle;
+    }
 }
