@@ -1,0 +1,9 @@
+{
+  "mapWidth": 20,
+  "mapHeight": 15,
+  "animalStartEnergy": 150,
+  "plantEnergy": 30,
+  "dailyEnergyCost": 1,
+  "numberOfSpawningAnimals": 10,
+  "jungleRatio": 0.4
+}
