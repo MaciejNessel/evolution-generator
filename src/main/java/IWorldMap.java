@@ -23,4 +23,8 @@ public interface IWorldMap {
     void eating();
 
     void newDay();
+
+    ArrayList<Vector2d> getToDelete();
+    ArrayList<Vector2d> getToAdd();
+    void clearAddAndDelete();
 }

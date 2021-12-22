@@ -46,4 +46,10 @@ public class Genotype {
         Collections.sort(newGenotype);
         return newGenotype;
     }
+
+
+    @Override
+    public String toString(){
+        return this.genotype.toString();
+    }
 }

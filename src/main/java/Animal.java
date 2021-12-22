@@ -72,6 +72,8 @@ public class Animal implements IPositionChangeObserver {
                 observer.positionChanged(oldPosition, newPosition, this);
             }
     }
+
+
     public void addObserver(IPositionChangeObserver observer){
         observerList.add(observer);
     }
@@ -86,8 +88,8 @@ public class Animal implements IPositionChangeObserver {
         switch (thisMove){
             case 0-> {
                 Vector2d newAnimalPosition = this.animalPosition.add(this.animalDirection.toVector());
-                if(!isWall || (isWall && newAnimalPosition.x >=0  && newAnimalPosition.x <=initialParameters.mapWidth
-                        && newAnimalPosition.y >=0  && newAnimalPosition.y <=initialParameters.mapHeight)){
+                if(!isWall || (isWall && newAnimalPosition.x >=0  && newAnimalPosition.x <initialParameters.mapWidth
+                        && newAnimalPosition.y >=0  && newAnimalPosition.y <initialParameters.mapHeight)){
                     newAnimalPosition.x = (newAnimalPosition.x + initialParameters.mapWidth) % initialParameters.mapWidth;
                     newAnimalPosition.y = (newAnimalPosition.y + initialParameters.mapHeight) % initialParameters.mapHeight;
                     positionChanged(this.animalPosition, newAnimalPosition, this);
