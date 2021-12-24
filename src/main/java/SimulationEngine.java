@@ -1,5 +1,3 @@
-import javafx.scene.control.Label;
-
 import java.util.ArrayList;
 
 public class SimulationEngine implements IEngine{
@@ -33,19 +31,22 @@ public class SimulationEngine implements IEngine{
             map.removeDeathAnimal();
             if(!map.moveAnimals()){
                 app.updateMap(map.getToUpdate(), map, map.getStatistics());
+                System.out.println("END");
                 break;
             }
             map.animalReproduction(observers);
             map.placeGrass();
-            map.clearUpdate();
-            ArrayList<Vector2d> toUpdate = map.getToUpdate();
-            Label stats = map.getStatistics();
-            app.updateMap(toUpdate, map, stats);
+
+            app.updateMap(map.getToUpdate(), map, map.getStatistics());
+
+            System.out.println(map);
             try {
                 Thread.sleep(initialParameters.delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            map.clearUpdate();
+
 
 
     }

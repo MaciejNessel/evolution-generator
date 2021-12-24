@@ -14,6 +14,7 @@ public class Animal implements IPositionChangeObserver {
     public ArrayList<IPositionChangeObserver> observerList = new ArrayList<>();
     private ArrayList<Animal> children = new ArrayList<>();
     private int age = 1;
+    public ArrayList<Integer> a = new ArrayList<>();
 
     public Animal(Animal parentA, Animal parentB, InitialParameters initialParameters){
         this.initialParameters = initialParameters;
@@ -45,8 +46,8 @@ public class Animal implements IPositionChangeObserver {
     }
 
     // Food - gives animals energy
-    public void eatGrass(Grass grass){
-        this.energy += grass.getEnergyProfit();
+    public void eatGrass(Grass grass, int numOfAnimalToFeed){
+        this.energy += (int) (grass.getEnergyProfit() / numOfAnimalToFeed);
     }
 
     // Getters and setters
@@ -81,6 +82,7 @@ public class Animal implements IPositionChangeObserver {
     // Moving the animal and changing its position depending on the preferences (depending on its genotype)
     public void move(boolean isWall){
         int thisMove = this.genotype.getMoveByGenotype();
+        a.add(thisMove);
         switch (thisMove){
             case 0-> {
                 Vector2d newAnimalPosition = this.animalPosition.add(this.animalDirection.toVector());
@@ -154,4 +156,5 @@ public class Animal implements IPositionChangeObserver {
     public void setChild(Animal animal){
         this.children.add(animal);
     }
+
 }

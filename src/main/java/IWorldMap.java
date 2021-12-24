@@ -1,6 +1,8 @@
 import javafx.scene.control.Label;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public interface IWorldMap {
 
@@ -26,10 +28,11 @@ public interface IWorldMap {
 
     void updateAnimalsEnergy();
 
-    ArrayList<Vector2d> getToUpdate();
+    HashSet<Vector2d> getToUpdate();
 
     void clearUpdate();
 
     Label getStatistics();
 
+    void saveStatistics() throws IOException;
 }

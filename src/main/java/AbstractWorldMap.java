@@ -1,13 +1,10 @@
 import javafx.scene.control.Label;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.IOException;
+import java.util.*;
 
 public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
-    // Map config
     public final InitialParameters initialParameters;
     public final boolean wallIsFence;
     private final boolean isMagical;
@@ -18,7 +15,9 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     private Integer deathAnimals = 0;
     private Integer avgLiveLengthAnimals = 1;
     private Integer avgChildren = 0;
-    ArrayList<Vector2d> toUpdate = new ArrayList<>();
+    HashSet<Vector2d> toUpdate = new HashSet<>();
+    private Statistics statistics = new Statistics();
+    private Integer numOfDay = 0;
 
     // Information about objects on the map
     private final Map<Vector2d, ArrayList<Animal>> animalMap = new TreeMap<>(new Comparator<Vector2d>(){
@@ -58,16 +57,24 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             childrenCounter += animal.getChildren().size();
             avgAnimalEnergy += animal.getEnergy();
         }
-        this.avgChildren = childrenCounter / animalsList.size();
-        this.avgAnimalEnergy /= animalsList.size();
+        if(animalsList.size()!=0){
+            this.avgChildren = childrenCounter / animalsList.size();
+            this.avgAnimalEnergy /= animalsList.size();
+        }
+
         Label result = new Label("Number of animals: " + numOfAnimals + "\n" +
                 "Number of grass: " + numOfGrass + "\n" +
                 "Average energy level: " + avgAnimalEnergy + "\n" +
                 "Average age of dead animals: " + avgLiveLengthAnimals + "\n" +
                 "Average number of children: " + avgChildren + "\n" +
                 "Genotype: ?");
+        statistics.addDayHistory(new DayHistory(numOfDay, numOfAnimals, numOfGrass, avgAnimalEnergy, avgLiveLengthAnimals, avgChildren));
         return result;
+    }
 
+    @Override
+    public void saveStatistics() throws IOException {
+        this.statistics.saveStatisticsToFile();
     }
 
     @Override
@@ -223,28 +230,41 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             placeAnimal(animal, observers);
         }
     }
-    //TODO więcej zwierząt
+
     @Override
     public void eating(){
         for(Vector2d key : animalMap.keySet()){
             ArrayList<Animal> animalList = animalMap.get(key);
-            for(Animal animal:animalList){
-                Grass grass = grassMap.get(animal.getPosition());
-                if(grass!=null){
-                    grassMap.remove(grass.getPosition());
-                    animal.eatGrass(grass);
-                    if(initialParameters.isPositionInJungle(grass.getPosition())){
-                        this.grassOfJungle+=1;
-                    }
-                    else{
-                        this.grassOfStep+=1;
+            if(animalList!=null && animalList.size()>0 && grassMap.get(key)!=null){
+                ArrayList<Animal> toFeed = new ArrayList<>();
+                int maxEnergy = 0;
+                for(Animal animal : animalList){
+                    maxEnergy = Math.max(maxEnergy, animal.getEnergy());
+                }
+                for(Animal animal : animalList){
+                    if(animal.getEnergy()==maxEnergy){
+                        toFeed.add(animal);
                     }
                 }
+                Grass grass = grassMap.get(key);
+                grassMap.remove(grass.getPosition());
+                for(Animal animal : toFeed){
+                    animal.eatGrass(grass, toFeed.size());
+                }
+
+                if(initialParameters.isPositionInJungle(grass.getPosition())){
+                    this.grassOfJungle+=1;
+                }
+                else{
+                    this.grassOfStep+=1;
+                }
+
             }
         }}
 
     @Override
     public void updateAnimalsEnergy(){
+        numOfDay +=1;
         for(Animal a : animalsList){
             a.updateAnimalsEnergy();
         }
@@ -266,6 +286,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     }
 
     // Number of fields occupied by animals
+    //TODO
     private int getNumberOfOccupiedFields(boolean isJungle){
         int cnt = 0;
         for(int i = 0; i<this.initialParameters.mapHeight; i++){
@@ -296,19 +317,13 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     }
 
     @Override
-    public ArrayList<Vector2d> getToUpdate(){
-        this.toUpdate = new ArrayList<>();
-        for(int i =0; i< this.initialParameters.mapHeight; i++){
-            for (int j=0; j<this.initialParameters.mapWidth; j++){
-                toUpdate.add(new Vector2d(j,i));
-            }
-        }
+    public HashSet<Vector2d> getToUpdate(){
         return this.toUpdate;
     }
 
     @Override
     public void clearUpdate() {
-        this.toUpdate = new ArrayList<>();
+        toUpdate.clear();
     }
 
 

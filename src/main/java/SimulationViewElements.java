@@ -1,10 +1,13 @@
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class SimulationViewElements {
@@ -17,6 +20,7 @@ public class SimulationViewElements {
     boolean isUpdatingNow = false;
     int day = 0;
     Text dayCnt;
+    Text animalDetails = new Text();
 
     int scale;
     public SimulationViewElements(IWorldMap map, InitialParameters config, App app, int scale){
@@ -56,9 +60,13 @@ public class SimulationViewElements {
                 result.add(actual, j+1, i+1, 1, 1);
             }
         }
-        dayCnt = new Text("0");
-        result.getChildren().add(dayCnt);
-        return result;
+        dayCnt = new Text("Day: 0");
+        GridPane together = new GridPane();
+        together.add(result, 0, 0);
+        together.add(dayCnt, 0, 1);
+        together.add(animalDetails, 0 ,2);
+
+        return together;
     }
 
 
@@ -66,25 +74,21 @@ public class SimulationViewElements {
         this.engine.pause();
     }
 
-    public void updatePositions(ArrayList<Vector2d> positions){
+    public void updatePositions(HashSet<Vector2d> positions){
             update(positions);
             day += 1;
-            dayCnt.setText(day+"");
+            dayCnt.setText("Day: "+day);
     }
 
-    public void  update(ArrayList<Vector2d> positions){
-        if(isUpdatingNow){
-            this.queueToUpdate.add(positions);
-            return;
-        }
-        this.isUpdatingNow = true;
+    public void  update(HashSet<Vector2d> positions){
         for(Vector2d position : positions){
+            //Clear all elements on map
             this.mapViewElements.get(position).getChildren().clear();
 
             ArrayList<Animal> animals = this.map.animalsAt(position);
             Grass grass = this.map.grassAt(position);
 
-            if(grass!=null){
+            if(grass!=null && (animals == null || animals.size()==0)){
                 this.mapViewElements.get(position).getChildren().add(grass.view(scale));
             }
             if(animals != null && animals.size()>0){
@@ -94,16 +98,20 @@ public class SimulationViewElements {
                         animalToView = animal;
                     }
                 }
-                this.mapViewElements.get(position).getChildren().add(animalToView.view(scale));
+                Circle shape = animalToView.view(scale);
+                //String text = animalToView.getGenotype().toString();
+                String text = animalToView.getEnergy().toString() + "\n" + animalToView.getGenotype().toString() + "\n" + animalToView.a.toString();
+                this.mapViewElements.get(position).getChildren().add(shape);
+                shape.setOnMouseClicked(e -> {
+                    this.animalDetails.setText(text);
+                });
             }
         }
-        this.isUpdatingNow = false;
-        if(queueToUpdate.size()>0){
-            ArrayList<Vector2d> next = queueToUpdate.get(0);
-            update(next);
-            queueToUpdate.remove(0);
-        }
 
+
+    }
+    public void saveToFile() throws IOException {
+        this.map.saveStatistics();
     }
 
 }

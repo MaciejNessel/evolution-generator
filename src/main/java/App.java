@@ -8,7 +8,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.HashSet;
 
 public class App extends Application {
     private boolean isStartedFirst = false;
@@ -53,6 +54,28 @@ public class App extends Application {
 
             }
         });
+        Button saveFirst = new Button("Save 1");
+        saveFirst.setOnAction(new EventHandler<ActionEvent>(){
+            @Override public void handle(ActionEvent e) {
+                try {
+                    firstSimulation.saveToFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+            }
+        });
+        Button saveSecond = new Button("Save 2");
+        saveSecond.setOnAction(new EventHandler<ActionEvent>(){
+            @Override public void handle(ActionEvent e) {
+                try {
+                    secondSimulation.saveToFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+            }
+        });
         Button startButtonSecond = new Button("Start 2");
         startButtonSecond.setOnAction(new EventHandler<ActionEvent>(){
             @Override public void handle(ActionEvent e) {
@@ -90,7 +113,9 @@ public class App extends Application {
         together.add(statisticsSecond, 1, 1);
         together.add(startButtonFirst, 0, 2);
         together.add(startButtonSecond, 1, 2);
-        together.add(restartButton, 0, 3);
+        together.add(saveFirst, 0 ,3 );
+        together.add(saveSecond, 1, 3);
+        together.add(restartButton, 0, 4);
         Scene a = new Scene(together, 1000, 500);
         this.primaryStage.setScene(a);
     }
@@ -111,9 +136,8 @@ public class App extends Application {
 
     }
 
-    public void updateMap(ArrayList<Vector2d> toUpdate, IWorldMap map, Label statistics){
+    public void updateMap(HashSet<Vector2d> toUpdate, IWorldMap map, Label statistics){
         Platform.runLater(() -> {
-            System.out.println(statistics);
             SimulationViewElements actualSimulation;
             if(this.firstSimulation.getMap() == map){
                 actualSimulation = this.firstSimulation;
