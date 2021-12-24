@@ -1,3 +1,5 @@
+import javafx.scene.control.Label;
+
 import java.util.ArrayList;
 
 public interface IWorldMap {
@@ -22,9 +24,12 @@ public interface IWorldMap {
 
     void eating();
 
-    void newDay();
+    void updateAnimalsEnergy();
 
-    ArrayList<Vector2d> getToDelete();
-    ArrayList<Vector2d> getToAdd();
-    void clearAddAndDelete();
+    ArrayList<Vector2d> getToUpdate();
+
+    void clearUpdate();
+
+    Label getStatistics();
+
 }

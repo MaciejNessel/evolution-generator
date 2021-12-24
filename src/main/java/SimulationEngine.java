@@ -1,7 +1,9 @@
+import javafx.scene.control.Label;
+
 import java.util.ArrayList;
 
 public class SimulationEngine implements IEngine{
-
+    private boolean isStarted = false;
     InitialParameters initialParameters;
     IWorldMap map;
     ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
@@ -13,6 +15,7 @@ public class SimulationEngine implements IEngine{
         this.putFirstAnimalsOnMap(initialParameters.numberOfSpawningAnimals);
         this.map.placeGrass();
         this.app = app;
+        app.updateMap(map.getToUpdate(), map, map.getStatistics());
     }
 
     private void putFirstAnimalsOnMap(int cnt){
@@ -23,23 +26,32 @@ public class SimulationEngine implements IEngine{
 
     @Override
     public void run() {
-        while (true){
-            map.newDay();
-            map.removeDeathAnimal();
-            map.moveAnimals();
+        this.isStarted = true;
+        while (this.isStarted){
+            map.updateAnimalsEnergy();
             map.eating();
+            map.removeDeathAnimal();
+            if(!map.moveAnimals()){
+                app.updateMap(map.getToUpdate(), map, map.getStatistics());
+                break;
+            }
             map.animalReproduction(observers);
             map.placeGrass();
-
-            app.updateMap(map.getToDelete(), map.getToAdd(), map);
-            map.clearAddAndDelete();
-            System.out.println(map);
+            map.clearUpdate();
+            ArrayList<Vector2d> toUpdate = map.getToUpdate();
+            Label stats = map.getStatistics();
+            app.updateMap(toUpdate, map, stats);
             try {
-                Thread.sleep(1000);
+                Thread.sleep(initialParameters.delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+
     }
-
-
-}}
+    }
+    @Override
+    public void pause(){
+        this.isStarted = false;
+    }
+}

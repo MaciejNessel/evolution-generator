@@ -12,12 +12,13 @@ public class Animal implements IPositionChangeObserver {
     private final Genotype genotype;
     private final InitialParameters initialParameters;
     public ArrayList<IPositionChangeObserver> observerList = new ArrayList<>();
+    private ArrayList<Animal> children = new ArrayList<>();
+    private int age = 1;
 
     public Animal(Animal parentA, Animal parentB, InitialParameters initialParameters){
         this.initialParameters = initialParameters;
         this.animalDirection = MapDirection.numberToDirection((int) (Math.random()*8));
         this.genotype = new Genotype(parentA, parentB);
-
         if(parentA==null || parentB==null || parentA == parentB){
             this.animalPosition = initialParameters.getRandomPosition();
             this.energy = initialParameters.animalStartEnergy;
@@ -73,14 +74,9 @@ public class Animal implements IPositionChangeObserver {
             }
     }
 
-
     public void addObserver(IPositionChangeObserver observer){
         observerList.add(observer);
     }
-    public void removeObserver(IPositionChangeObserver observer){
-        observerList.remove(observer);
-    }
-
 
     // Moving the animal and changing its position depending on the preferences (depending on its genotype)
     public void move(boolean isWall){
@@ -88,8 +84,7 @@ public class Animal implements IPositionChangeObserver {
         switch (thisMove){
             case 0-> {
                 Vector2d newAnimalPosition = this.animalPosition.add(this.animalDirection.toVector());
-                if(!isWall || (isWall && newAnimalPosition.x >=0  && newAnimalPosition.x <initialParameters.mapWidth
-                        && newAnimalPosition.y >=0  && newAnimalPosition.y <initialParameters.mapHeight)){
+                if(!isWall || newAnimalPosition.x >= 0 && newAnimalPosition.x < initialParameters.mapWidth && newAnimalPosition.y >= 0 && newAnimalPosition.y < initialParameters.mapHeight){
                     newAnimalPosition.x = (newAnimalPosition.x + initialParameters.mapWidth) % initialParameters.mapWidth;
                     newAnimalPosition.y = (newAnimalPosition.y + initialParameters.mapHeight) % initialParameters.mapHeight;
                     positionChanged(this.animalPosition, newAnimalPosition, this);
@@ -101,8 +96,7 @@ public class Animal implements IPositionChangeObserver {
             case 3-> this.changeDirection(3);
             case 4-> {
                 Vector2d newAnimalPosition = this.animalPosition.add(this.animalDirection.toVector().opposite());
-                if(!isWall || (isWall && newAnimalPosition.x >=0  && newAnimalPosition.x <=initialParameters.mapWidth
-                        && newAnimalPosition.y >=0  && newAnimalPosition.y <=initialParameters.mapHeight)){
+                if(!isWall || newAnimalPosition.x >= 0 && newAnimalPosition.x < initialParameters.mapWidth && newAnimalPosition.y >= 0 && newAnimalPosition.y < initialParameters.mapHeight){
                 newAnimalPosition.x = (newAnimalPosition.x + initialParameters.mapWidth) % initialParameters.mapWidth;
                 newAnimalPosition.y =( newAnimalPosition.y + initialParameters.mapHeight)% initialParameters.mapHeight;
                 positionChanged(this.animalPosition, newAnimalPosition, this);
@@ -120,9 +114,10 @@ public class Animal implements IPositionChangeObserver {
             this.animalDirection = this.animalDirection.oneChangeDirection();
         }
     }
-    // Update actual animal's energy
-    public void newDay(){
+    // Update actual animal's energy and age
+    public void updateAnimalsEnergy(){
         this.energy -= initialParameters.dailyEnergyCost;
+        this.age += 1;
     }
 
     public String toString(){
@@ -130,7 +125,33 @@ public class Animal implements IPositionChangeObserver {
     }
 
     public Circle view(int scale){
-        Circle circle = new Circle((double) (scale/2), new Color(0.5, 0.3, 0, 1));
-        return circle;
+        Color color;
+
+        if(0.9 * initialParameters.animalStartEnergy <= this.energy && 1.1 * initialParameters.animalStartEnergy > this.energy){
+            color = new Color(0.3, 0.2, 0, 1);
+        }
+        else if(this.energy >= 1.1 * initialParameters.animalStartEnergy){
+            color = new Color(0.2, 0.1, 0, 1);
+        }
+        else if(0.5 * initialParameters.animalStartEnergy <= this.energy && 0.9 * initialParameters.animalStartEnergy > this.energy){
+            color = new Color(0.4, 0.2, 0, 1);
+        }
+        else if(0.2 * initialParameters.animalStartEnergy <= this.energy && 0.5 * initialParameters.animalStartEnergy > this.energy){
+            color = new Color(0.6, 0.25, 0, 1);
+        }
+        else{
+            color = new Color(0.8, 0.4, 0, 1);
+        }
+        return new Circle((double) (scale/2), color);
+    }
+
+    public ArrayList<Animal> getChildren(){return this.children;}
+
+    public int getAge(){
+        return this.age;
+    }
+
+    public void setChild(Animal animal){
+        this.children.add(animal);
     }
 }

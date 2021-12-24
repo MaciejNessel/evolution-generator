@@ -1,4 +1,9 @@
-import java.util.*;
+import javafx.scene.control.Label;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
@@ -9,9 +14,11 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     private int grassOfStep;
     private int grassOfJungle;
     private int cntOfMagicalUse = 0;
-
-    ArrayList<Vector2d> toDelete = new ArrayList<>();
-    ArrayList<Vector2d> toAdd = new ArrayList<>();
+    private Integer avgAnimalEnergy = 0;
+    private Integer deathAnimals = 0;
+    private Integer avgLiveLengthAnimals = 1;
+    private Integer avgChildren = 0;
+    ArrayList<Vector2d> toUpdate = new ArrayList<>();
 
     // Information about objects on the map
     private final Map<Vector2d, ArrayList<Animal>> animalMap = new TreeMap<>(new Comparator<Vector2d>(){
@@ -31,6 +38,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         }});
     private final ArrayList<Animal> animalsList = new ArrayList<>();
 
+
     public AbstractWorldMap(InitialParameters config, boolean wallIsFence, boolean isMagical){
         this.initialParameters = config;
         this.wallIsFence = wallIsFence;
@@ -40,22 +48,45 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     }
 
     @Override
+    public Label getStatistics(){
+        int numOfAnimals = animalsList.size();
+        int numOfGrass = grassMap.size();
+        //dominujący genotyp
+        int childrenCounter = 0;
+        avgAnimalEnergy = 0;
+        for(Animal animal : animalsList) {
+            childrenCounter += animal.getChildren().size();
+            avgAnimalEnergy += animal.getEnergy();
+        }
+        this.avgChildren = childrenCounter / animalsList.size();
+        this.avgAnimalEnergy /= animalsList.size();
+        Label result = new Label("Number of animals: " + numOfAnimals + "\n" +
+                "Number of grass: " + numOfGrass + "\n" +
+                "Average energy level: " + avgAnimalEnergy + "\n" +
+                "Average age of dead animals: " + avgLiveLengthAnimals + "\n" +
+                "Average number of children: " + avgChildren + "\n" +
+                "Genotype: ?");
+        return result;
+
+    }
+
+    @Override
     public void placeAnimal(Animal animal, ArrayList<IPositionChangeObserver> observers) {
         Vector2d position = animal.getPosition();
         if(canPutAnimal(position)){
+            toUpdate.add(position);
+            animalsList.add(animal);
             ArrayList<Animal> animals = animalMap.get(position);
             if(animals == null) {
                 animals = new ArrayList<>();
                 animals.add(animal);
                 animalMap.put(position, animals);
-                animalsList.add(animal);
                 for(IPositionChangeObserver observer : observers){
                     animal.addObserver(observer);
                 }
             }
             else{
                 animalMap.get(position).add(animal);
-                animalsList.add(animal);
             }
         }
     }
@@ -64,7 +95,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     public boolean placeGrass() {
         int numOfAnimalsOnStep = getNumberOfOccupiedFields(false);
         int numOfAnimalsOnJungle = getNumberOfOccupiedFields(true);
-        // If the whole map is full of animals, the plant has no place to grow
+        // I f the whole map is full of animals, the plant has no place to grow
         if(numOfAnimalsOnStep + numOfAnimalsOnJungle >=initialParameters.allMapField){
             return true;
         }
@@ -76,7 +107,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             Grass grass = new Grass(initialParameters.grassEnergyProfit, a);
             grassMap.put(grass.getPosition(), grass);
             grassOfJungle -= 1;
-            this.toAdd.add(grass.getPosition());
+            this.toUpdate.add(grass.getPosition());
         }
         if(this.grassOfStep - numOfAnimalsOnStep>0){
             Vector2d a = initialParameters.getRandomStepPosition();
@@ -87,7 +118,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             Grass grass = new Grass(initialParameters.grassEnergyProfit, a);
             grassMap.put(grass.getPosition(), grass);
             grassOfStep -= 1;
-            this.toAdd.add(grass.getPosition());
+            this.toUpdate.add(grass.getPosition());
         }
         return true;
     }
@@ -104,8 +135,8 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
     @Override
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, Animal animal) {
-        this.toDelete.add(oldPosition);
-        this.toAdd.add(newPosition);
+        this.toUpdate.add(oldPosition);
+        this.toUpdate.add(newPosition);
         animalMap.get(oldPosition).remove( animal);
         ArrayList<Animal> animals = animalMap.get(newPosition);
         if(animals==null){
@@ -121,8 +152,10 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
     @Override
     public void removeDeathAnimal(){
-        ArrayList<Animal> toRemove = new ArrayList<>();
+
+
         for(Vector2d key : animalMap.keySet()){
+            ArrayList<Animal> toRemove = new ArrayList<>();
             ArrayList<Animal> list = animalMap.get(key);
             for(Animal animal : list){
                 if (animal.getEnergy()<1){
@@ -130,9 +163,11 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
                 }
             }
             for(Animal animal : toRemove){
+                deathAnimals += 1;
+                avgLiveLengthAnimals = ((deathAnimals - 1) * avgLiveLengthAnimals + animal.getAge()) / deathAnimals;
                 list.remove(animal);
                 this.animalsList.remove(animal);
-                this.toDelete.add(animal.getPosition());
+                this.toUpdate.add(animal.getPosition());
             }
         }
 
@@ -175,14 +210,20 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
                         maxEnergySecond = animal.getEnergy();
                     }
                 }
-                toReproduce.add(new Animal(a, b, initialParameters));
+                if(a!=null && b!= null && a.canReproduce() && b.canReproduce()){
+                    Animal newAnimal = new Animal(a, b, initialParameters);
+                    toReproduce.add(newAnimal);
+                    a.setChild(newAnimal);
+                    b.setChild(newAnimal);
+                }
+
             }
         }
         for (Animal animal : toReproduce){
             placeAnimal(animal, observers);
         }
     }
-
+    //TODO więcej zwierząt
     @Override
     public void eating(){
         for(Vector2d key : animalMap.keySet()){
@@ -203,18 +244,15 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         }}
 
     @Override
-    public void newDay(){
+    public void updateAnimalsEnergy(){
         for(Animal a : animalsList){
-            a.newDay();
+            a.updateAnimalsEnergy();
         }
     }
 
     @Override
     public String toString(){
-        System.out.println("LICZBA ZWIERZĄT: " + animalsList.size());
-        System.out.println("LICZBA TRAW: " + grassMap.size());
-        System.out.println(this.getNumberOfOccupiedFields(false) + ", "+this.getNumberOfOccupiedFields(false));
-        return "";
+        return new MapView(this, initialParameters).toString();
     }
 
     // It is possible to place an animal if its position fits on the map (or the map has no walls)
@@ -256,19 +294,21 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             placeAnimal(a, a.observerList);
         }
     }
+
     @Override
-    public ArrayList<Vector2d> getToDelete(){
-        return this.toDelete;
-    }
-    @Override
-    public ArrayList<Vector2d> getToAdd(){
-        return this.toAdd;
+    public ArrayList<Vector2d> getToUpdate(){
+        this.toUpdate = new ArrayList<>();
+        for(int i =0; i< this.initialParameters.mapHeight; i++){
+            for (int j=0; j<this.initialParameters.mapWidth; j++){
+                toUpdate.add(new Vector2d(j,i));
+            }
+        }
+        return this.toUpdate;
     }
 
     @Override
-    public void clearAddAndDelete() {
-        this.toAdd = new ArrayList<>();
-        this.toDelete = new ArrayList<>();
+    public void clearUpdate() {
+        this.toUpdate = new ArrayList<>();
     }
 
 

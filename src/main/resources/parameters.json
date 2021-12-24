@@ -1,9 +1,10 @@
 {
   "mapWidth": 10,
   "mapHeight": 10,
-  "animalStartEnergy": 150000,
-  "grassEnergyProfit": 30,
+  "animalStartEnergy": 150,
+  "grassEnergyProfit": 10,
   "dailyEnergyCost": 1,
-  "numberOfSpawningAnimals": 10,
-  "jungleRatio": 0.4
+  "numberOfSpawningAnimals": 50,
+  "jungleRatio": 0.4,
+  "delay": 50
 }
