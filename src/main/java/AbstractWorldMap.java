@@ -1,4 +1,4 @@
-import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.util.*;
@@ -15,8 +15,8 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     private Integer deathAnimals = 0;
     private Integer avgLiveLengthAnimals = 1;
     private Integer avgChildren = 0;
-    HashSet<Vector2d> toUpdate = new HashSet<>();
-    private Statistics statistics = new Statistics();
+    private final HashSet<Vector2d> toUpdate = new HashSet<>();
+    private final Statistics statistics = new Statistics();
     private Integer numOfDay = 0;
 
     // Information about objects on the map
@@ -47,29 +47,32 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     }
 
     @Override
-    public Label getStatistics(){
+    public void getStatistics(){
         int numOfAnimals = animalsList.size();
         int numOfGrass = grassMap.size();
-        //dominujący genotyp
         int childrenCounter = 0;
-        avgAnimalEnergy = 0;
+        this.avgAnimalEnergy = 0;
         for(Animal animal : animalsList) {
             childrenCounter += animal.getChildren().size();
-            avgAnimalEnergy += animal.getEnergy();
+            this.avgAnimalEnergy += animal.getEnergy();
         }
         if(animalsList.size()!=0){
             this.avgChildren = childrenCounter / animalsList.size();
             this.avgAnimalEnergy /= animalsList.size();
         }
-
-        Label result = new Label("Number of animals: " + numOfAnimals + "\n" +
-                "Number of grass: " + numOfGrass + "\n" +
-                "Average energy level: " + avgAnimalEnergy + "\n" +
-                "Average age of dead animals: " + avgLiveLengthAnimals + "\n" +
-                "Average number of children: " + avgChildren + "\n" +
-                "Genotype: ?");
+        HashMap<ArrayList<Integer>, Integer> genotypes = new HashMap<>();
+        for(Animal animal : animalsList){
+            ArrayList<Integer> actualGenotype = animal.getGenotype();
+            Integer cnt = genotypes.get(actualGenotype);
+            if(genotypes.get(actualGenotype)!=null){
+                genotypes.remove(actualGenotype);
+                genotypes.put(actualGenotype, cnt+1);
+            }
+            else{
+                genotypes.put(actualGenotype, 1);
+            }
+        }
         statistics.addDayHistory(new DayHistory(numOfDay, numOfAnimals, numOfGrass, avgAnimalEnergy, avgLiveLengthAnimals, avgChildren));
-        return result;
     }
 
     @Override
@@ -102,7 +105,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     public boolean placeGrass() {
         int numOfAnimalsOnStep = getNumberOfOccupiedFields(false);
         int numOfAnimalsOnJungle = getNumberOfOccupiedFields(true);
-        // I f the whole map is full of animals, the plant has no place to grow
+        // If the whole map is full of animals, the plant has no place to grow
         if(numOfAnimalsOnStep + numOfAnimalsOnJungle >=initialParameters.allMapField){
             return true;
         }
@@ -159,8 +162,6 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
     @Override
     public void removeDeathAnimal(){
-
-
         for(Vector2d key : animalMap.keySet()){
             ArrayList<Animal> toRemove = new ArrayList<>();
             ArrayList<Animal> list = animalMap.get(key);
@@ -172,6 +173,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
             for(Animal animal : toRemove){
                 deathAnimals += 1;
                 avgLiveLengthAnimals = ((deathAnimals - 1) * avgLiveLengthAnimals + animal.getAge()) / deathAnimals;
+                animal.setDeath(numOfDay);
                 list.remove(animal);
                 this.animalsList.remove(animal);
                 this.toUpdate.add(animal.getPosition());
@@ -181,6 +183,7 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         if(animalsList.size() == 5 && isMagical && cntOfMagicalUse < 3){
             this.cntOfMagicalUse += 1;
             System.out.println("MAGIC..............................");
+            statistics.magic(cntOfMagicalUse);
             placeAnimalsMagic(animalsList);
         }
     }
@@ -326,6 +329,10 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         toUpdate.clear();
     }
 
+    @Override
+    public VBox getGraph(){
+        return this.statistics.getGaph();
+    }
 
 
 

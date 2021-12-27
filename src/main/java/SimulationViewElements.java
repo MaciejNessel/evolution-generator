@@ -1,14 +1,15 @@
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public class SimulationViewElements {
     IWorldMap map;
@@ -16,11 +17,12 @@ public class SimulationViewElements {
     Map<Vector2d, Pane> mapViewElements = new HashMap<>();
     IEngine engine;
     InitialParameters config;
-    ArrayList<ArrayList<Vector2d>> queueToUpdate = new ArrayList<>();
-    boolean isUpdatingNow = false;
+
     int day = 0;
     Text dayCnt;
-    Text animalDetails = new Text();
+    VBox animalDetails = new VBox();
+    ScrollPane animalDetailsScroll = new ScrollPane();
+    Animal selected;
 
     int scale;
     public SimulationViewElements(IWorldMap map, InitialParameters config, App app, int scale){
@@ -29,6 +31,12 @@ public class SimulationViewElements {
         this.engine = new SimulationEngine(config, this.map, app);
         this.scale = scale;
         this.mapView = createJungleAndSteppe();
+        this.mapView.setAlignment(Pos.CENTER_RIGHT);
+
+        animalDetailsScroll.setContent(animalDetails);
+
+        animalDetailsScroll.setMaxWidth(config.mapWidth*scale);
+        animalDetailsScroll.setMinHeight(80);
 
     }
     public IWorldMap getMap(){
@@ -63,12 +71,10 @@ public class SimulationViewElements {
         dayCnt = new Text("Day: 0");
         GridPane together = new GridPane();
         together.add(result, 0, 0);
-        together.add(dayCnt, 0, 1);
-        together.add(animalDetails, 0 ,2);
+        together.add(animalDetailsScroll, 0 ,2);
 
         return together;
     }
-
 
     public void pauseSimulation(){
         this.engine.pause();
@@ -80,7 +86,11 @@ public class SimulationViewElements {
             dayCnt.setText("Day: "+day);
     }
 
-    public void  update(HashSet<Vector2d> positions){
+    public void update(HashSet<Vector2d> positions){
+        if (selected != null){
+            animalDetails.getChildren().clear();
+            animalDetails.getChildren().add(selected.getAnimalInformation());
+        }
         for(Vector2d position : positions){
             //Clear all elements on map
             this.mapViewElements.get(position).getChildren().clear();
@@ -99,17 +109,24 @@ public class SimulationViewElements {
                     }
                 }
                 Circle shape = animalToView.view(scale);
-                //String text = animalToView.getGenotype().toString();
-                String text = animalToView.getEnergy().toString() + "\n" + animalToView.getGenotype().toString() + "\n" + animalToView.a.toString();
+                Label l = animalToView.getAnimalInformation();
+
                 this.mapViewElements.get(position).getChildren().add(shape);
+                Animal finalAnimalToView = animalToView;
                 shape.setOnMouseClicked(e -> {
-                    this.animalDetails.setText(text);
+                    if(selected!=null){
+                        selected.stopFollow();
+                    }
+                    this.animalDetails.getChildren().clear();
+                    this.animalDetails.getChildren().add(l);
+                    selected = finalAnimalToView;
                 });
             }
         }
 
 
     }
+
     public void saveToFile() throws IOException {
         this.map.saveStatistics();
     }

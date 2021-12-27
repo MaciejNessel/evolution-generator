@@ -1,3 +1,6 @@
+import javafx.application.Platform;
+import javafx.scene.layout.VBox;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -9,6 +12,7 @@ import java.util.stream.Stream;
 public class Statistics {
 
     ArrayList<DayHistory> stats;
+    Graph graph = new Graph(this);
 
     public Statistics(){
         this.stats = new ArrayList<>();
@@ -16,12 +20,11 @@ public class Statistics {
 
     public void addDayHistory(DayHistory dayHistory){
         this.stats.add(dayHistory);
+        Platform.runLater(() -> {this.graph.updateGraph();});
     }
-
     public ArrayList<DayHistory> getStats(){
         return this.stats;
     }
-
     public void saveStatisticsToFile() throws IOException {
         // Final data
         int animalsEnd = 0;
@@ -61,8 +64,16 @@ public class Statistics {
                     .forEach(pw::println);
         }
     }
-
     public String convertToCSV(String[] data) {
         return Stream.of(data).collect(Collectors.joining(","));
     }
+
+
+    public VBox getGaph(){
+        return graph.getGraph();
+    };
+    public void magic(int number){
+        graph.magic(number);
+    }
+
 }

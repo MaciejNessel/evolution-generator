@@ -1,8 +1,8 @@
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class Animal implements IPositionChangeObserver {
@@ -15,6 +15,10 @@ public class Animal implements IPositionChangeObserver {
     private ArrayList<Animal> children = new ArrayList<>();
     private int age = 1;
     public ArrayList<Integer> a = new ArrayList<>();
+
+    private boolean isObserved = false;
+    private int deadDay;
+    private Label animalInfo = new Label();
 
     public Animal(Animal parentA, Animal parentB, InitialParameters initialParameters){
         this.initialParameters = initialParameters;
@@ -29,6 +33,30 @@ public class Animal implements IPositionChangeObserver {
             this.energy = updateEnergy(parentA, parentB);
         }
     }
+    //Animal's stathistic
+    public Label getAnimalInformation(){
+        updateStatistic();
+        this.startFollow();
+        return this.animalInfo;
+    }
+
+    public void startFollow(){
+        isObserved = true;
+    }
+
+    private void updateStatistic(){
+        animalInfo.setText("Last position: "+ this.animalPosition + " \nGenotype: " + this.getGenotype() + "\n"
+        + "Number of children: " + children.size() + "\n"
+        + "Dead: " + deadDay);
+    }
+    public void stopFollow(){
+        isObserved = false;
+    }
+    public void setDeath(int deadDay){
+        this.deadDay = deadDay;
+        isObserved = false;
+    }
+
 
     public void changePosition(Vector2d pos){
         this.animalPosition = pos;
@@ -51,7 +79,7 @@ public class Animal implements IPositionChangeObserver {
     }
 
     // Getters and setters
-    public List<Integer> getGenotype(){
+    public ArrayList<Integer> getGenotype(){
         return this.genotype.getGenotype();
     }
     public Integer getEnergy(){
@@ -157,4 +185,7 @@ public class Animal implements IPositionChangeObserver {
         this.children.add(animal);
     }
 
+    public boolean isObserved(){
+        return this.isObserved;
+    }
 }

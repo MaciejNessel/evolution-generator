@@ -13,7 +13,7 @@ public class SimulationEngine implements IEngine{
         this.putFirstAnimalsOnMap(initialParameters.numberOfSpawningAnimals);
         this.map.placeGrass();
         this.app = app;
-        app.updateMap(map.getToUpdate(), map, map.getStatistics());
+        app.updateMap(map.getToUpdate(), map);
     }
 
     private void putFirstAnimalsOnMap(int cnt){
@@ -26,22 +26,21 @@ public class SimulationEngine implements IEngine{
     public void run() {
         this.isStarted = true;
         while (this.isStarted){
+            map.getStatistics();
             map.updateAnimalsEnergy();
             map.eating();
             map.removeDeathAnimal();
             if(!map.moveAnimals()){
-                app.updateMap(map.getToUpdate(), map, map.getStatistics());
+                app.updateMap(map.getToUpdate(), map);
                 System.out.println("END");
                 break;
             }
             map.animalReproduction(observers);
             map.placeGrass();
 
-            app.updateMap(map.getToUpdate(), map, map.getStatistics());
-
-            System.out.println(map);
+            app.updateMap(map.getToUpdate(), map);
             try {
-                Thread.sleep(initialParameters.delay);
+                Thread.sleep(Math.max(initialParameters.delay, 10));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

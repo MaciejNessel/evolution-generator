@@ -25,4 +25,28 @@ public class DayHistory {
         return new String[]{numOfDay.toString(), numOfAllAnimals.toString(), numOfAllGrass.toString(), avgEnergyOfLivingAnimals.toString(), avgLifeLength.toString(), avgOwnedChildren.toString()};
     }
 
+    public Integer getAvgOwnedChildren() {
+        return avgOwnedChildren;
+    }
+
+    public Integer getAvgEnergyOfLivingAnimals() {
+        return avgEnergyOfLivingAnimals;
+    }
+
+    public Integer getAvgLifeLength() {
+        return avgLifeLength;
+    }
+
+    public Integer getNumOfAllAnimals() {
+        return numOfAllAnimals;
+    }
+
+    public Integer getNumOfAllGrass() {
+        return numOfAllGrass;
+    }
+
+    public Integer getNumOfDay() {
+        return numOfDay;
+    }
+
 }

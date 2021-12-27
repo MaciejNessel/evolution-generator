@@ -2,10 +2,13 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -18,10 +21,6 @@ public class App extends Application {
     private SimulationViewElements secondSimulation;
     private Stage primaryStage;
     private InitialParameters config;
-    private boolean isMagicalFirst = false;
-    private boolean isMagicalSecond = false;
-    private Label statisticsFirst = new Label();
-    private Label statisticsSecond = new Label();
 
     private void newThread( SimulationViewElements simulation){
         Thread name = new Thread(() ->{
@@ -31,7 +30,7 @@ public class App extends Application {
     }
 
     public void startSimulation(){
-        int scale = Math.max(1, 400 / (Math.max(config.mapHeight, config.mapWidth) + 1));
+        int scale = Math.max(1,300 / (Math.max(config.mapHeight, config.mapWidth) + 1));
 
         this.firstSimulation = new SimulationViewElements(new AbstractWorldMap(config, false, config.isMagicalFirst), config, this, scale);
         this.secondSimulation = new SimulationViewElements(new AbstractWorldMap(config, true, config.isMagicalSecond), config, this, scale);
@@ -108,19 +107,38 @@ public class App extends Application {
         });
 
         together.add(firstSimulation.getMapView(), 0,0);
-        together.add(secondSimulation.getMapView(), 1, 0);
-        together.add(statisticsFirst, 0, 1);
-        together.add(statisticsSecond, 1, 1);
-        together.add(startButtonFirst, 0, 2);
-        together.add(startButtonSecond, 1, 2);
-        together.add(saveFirst, 0 ,3 );
-        together.add(saveSecond, 1, 3);
-        together.add(restartButton, 0, 4);
-        Scene a = new Scene(together, 1000, 500);
+        together.add(secondSimulation.getMapView(), 0, 1);
+        VBox firstButtons = new VBox(startButtonFirst, saveFirst);
+        together.add(firstButtons, 1, 0);
+        firstButtons.setAlignment(Pos.CENTER);
+        VBox secondButtons = new VBox(startButtonSecond, saveSecond);
+        secondButtons.setAlignment(Pos.CENTER);
+        together.add(secondButtons, 1, 1);
+        VBox firstGraph = firstSimulation.getMap().getGraph();
+        firstGraph.setMaxHeight(350);
+        VBox secondGraph = secondSimulation.getMap().getGraph();
+        secondGraph.setMaxHeight(350);
+        together.add(firstGraph, 2, 0);
+
+        firstGraph.setMinWidth(800);
+        together.add(secondGraph, 2, 1);
+        VBox buttonRestart = new VBox(restartButton);
+
+        together.addColumn(3, buttonRestart);
+        together.setAlignment(Pos.CENTER);
+        ScrollPane sceneScroll = new ScrollPane();
+        sceneScroll.setContent(together);
+        sceneScroll.setFitToWidth(true);
+        sceneScroll.setFitToHeight(true);
+        Scene a = new Scene(sceneScroll);
+
         this.primaryStage.setScene(a);
+        this.primaryStage.setMaximized(true);
     }
 
     private void newInsert() {
+        this.primaryStage.setMaximized(false);
+
         primaryStage.setScene(config.getScene());
         primaryStage.show();
         System.gc();
@@ -130,26 +148,22 @@ public class App extends Application {
     public void start(Stage primaryStage) throws InterruptedException {
         this.config = new InitialParameters(this);
         this.primaryStage = primaryStage;
-
         primaryStage.setScene(config.getScene());
+        primaryStage.setTitle("Evolution Generator");
+        primaryStage.getIcons().add(new Image("file:src/main/resources/icon.png"));
         primaryStage.show();
-
     }
 
-    public void updateMap(HashSet<Vector2d> toUpdate, IWorldMap map, Label statistics){
+    public void updateMap(HashSet<Vector2d> toUpdate, IWorldMap map){
         Platform.runLater(() -> {
             SimulationViewElements actualSimulation;
             if(this.firstSimulation.getMap() == map){
                 actualSimulation = this.firstSimulation;
-                this.statisticsFirst.setText(statistics.getText());
             }
             else{
                 actualSimulation = this.secondSimulation;
-                this.statisticsSecond.setText(statistics.getText());
             }
-
             actualSimulation.updatePositions(toUpdate);
-
             });
     }
 
