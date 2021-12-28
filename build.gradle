@@ -1,6 +1,11 @@
 plugins {
     id 'java'
     id 'org.openjfx.javafxplugin' version '0.0.10'
+    id 'application'
+}
+
+application {
+    mainClassName = 'World'
 }
 
 group 'org.example'
