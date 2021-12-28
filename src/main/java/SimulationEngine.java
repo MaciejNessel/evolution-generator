@@ -1,6 +1,7 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
-public class SimulationEngine implements IEngine{
+public class SimulationEngine implements Runnable{
     private boolean isStarted = false;
     InitialParameters initialParameters;
     IWorldMap map;
@@ -37,20 +38,17 @@ public class SimulationEngine implements IEngine{
             }
             map.animalReproduction(observers);
             map.placeGrass();
-
-            app.updateMap(map.getToUpdate(), map);
+            HashSet<Vector2d> toUpdate = new HashSet<>(map.getToUpdate());
+            app.updateMap(toUpdate, map);
             try {
-                Thread.sleep(Math.max(initialParameters.delay, 10));
+                Thread.sleep(5);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             map.clearUpdate();
-
-
-
+        }
     }
-    }
-    @Override
+
     public void pause(){
         this.isStarted = false;
     }

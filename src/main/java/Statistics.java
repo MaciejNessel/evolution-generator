@@ -1,30 +1,24 @@
 import javafx.application.Platform;
 import javafx.scene.layout.VBox;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Statistics {
-
-    ArrayList<DayHistory> stats;
-    Graph graph = new Graph(this);
+    private final ArrayList<DayHistory> allDayHistoriess;
+    private final Graph graph = new Graph(this);
 
     public Statistics(){
-        this.stats = new ArrayList<>();
+        this.allDayHistoriess = new ArrayList<>();
     }
 
     public void addDayHistory(DayHistory dayHistory){
-        this.stats.add(dayHistory);
-        Platform.runLater(() -> {this.graph.updateGraph();});
+        this.allDayHistoriess.add(dayHistory);
+        Platform.runLater(() -> {this.graph.updateChart();});
     }
-    public ArrayList<DayHistory> getStats(){
-        return this.stats;
-    }
+
     public void saveStatisticsToFile() throws IOException {
         // Final data
         int animalsEnd = 0;
@@ -37,15 +31,14 @@ public class Statistics {
         List<String[]> dataLines = new ArrayList<>();
         dataLines.add(new String[]{"Day", "Number of animals", "Number of grass", "AVG Energy", "AVG life length", "AVG owned children"});
 
-        for(DayHistory dh : stats){
-            int[] actual = dh.getDayHistory();
+        for(DayHistory dh : allDayHistoriess){
             dataLines.add(dh.getDayHistoryString());
-            animalsEnd += actual[1];
-            grassEnd += actual[2];
-            energyEnd += actual[3];
-            lifeEnd += actual[4];
-            childrenEnd += actual[5];
-            daysEnd = actual[0];
+            animalsEnd += dh.getNumOfAllAnimals();
+            grassEnd += dh.getNumOfAllGrass();
+            energyEnd += dh.getAvgEnergyOfLivingAnimals();
+            lifeEnd += dh.getAvgLifeLength();
+            childrenEnd += dh.getAvgOwnedChildren();
+            daysEnd = dh.getNumOfDay();
         }
         if(daysEnd != 0){
             animalsEnd /= daysEnd;
@@ -65,15 +58,18 @@ public class Statistics {
         }
     }
     public String convertToCSV(String[] data) {
-        return Stream.of(data).collect(Collectors.joining(","));
+        return String.join(",", data);
     }
 
-
-    public VBox getGaph(){
+    public VBox getGraph(){
         return graph.getGraph();
     };
+
     public void magic(int number){
         graph.magic(number);
     }
 
+    public DayHistory lastDayHistory(){
+        return allDayHistoriess.get(allDayHistoriess.size()-1);
+    }
 }

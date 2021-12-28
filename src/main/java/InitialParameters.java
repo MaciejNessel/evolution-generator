@@ -7,6 +7,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import org.json.simple.JSONObject;
@@ -46,6 +47,7 @@ public class InitialParameters {
 
         VBox container = new VBox();
         JSONParser jsonParser = new JSONParser();
+        // Load parameters from json file
         try (FileReader reader = new FileReader("src\\main\\resources\\parameters.json")){
             Object obj = jsonParser.parse(reader);
             JSONObject parameters = (JSONObject) obj;
@@ -88,7 +90,6 @@ public class InitialParameters {
             container.getChildren().add(dailyEnergyCostL);
             container.getChildren().add(dailyEnergyCostInsert);
 
-
             Label numberOfSpawningAnimalsL = new Label("Number of spawning animals: ");
             TextField numberOfSpawningAnimalsInsert = new TextField(parameters.get("numberOfSpawningAnimals").toString());
             numberOfSpawningAnimalsInsert.setMaxWidth(250);
@@ -120,33 +121,41 @@ public class InitialParameters {
             container.getChildren().add(choiceBoxSecond);
 
 
-
-            Label delayL = new Label("Delay: ");
-            TextField delayInsert = new TextField(parameters.get("delay").toString());
-            delayInsert.setMaxWidth(250);
-            delayInsert.setAlignment(Pos.CENTER);
-            container.getChildren().add(delayL);
-            container.getChildren().add(delayInsert);
-
+            Label err = new Label("incorrect input format");
+            err.setTextFill(Color.RED);
+            err.setFont(new Font(15));
             Button btn = new Button("Generate new map");
 
             btn.setOnAction(new EventHandler<ActionEvent>(){
                 @Override public void handle(ActionEvent e) {
-                    mapWidth = Integer.parseInt(widthInsert.getText());
-                    mapHeight = Integer.parseInt(heightInsert.getText());
-                    animalStartEnergy = Integer.parseInt(animalEnergyInsert.getText());
-                    grassEnergyProfit = Integer.parseInt(grassProfitInsert.getText());
-                    dailyEnergyCost = Integer.parseInt(dailyEnergyCostInsert.getText());
-                    numberOfSpawningAnimals = Integer.parseInt(numberOfSpawningAnimalsInsert.getText());
-                    jungleRatio = Double.parseDouble(jungleRatioInsert.getText());
-                    delay = Integer.parseInt(delayInsert.getText());
-                    isMagicalFirst = choiceBoxFirst.getValue();
-                    isMagicalSecond = choiceBoxSecond.getValue();
-                    energyToReproduce = animalStartEnergy / 5;
-                    allMapField = mapHeight * mapWidth;
-                    validate();
+                    try{
+                        mapWidth = Integer.parseInt(widthInsert.getText());
+                        mapHeight = Integer.parseInt(heightInsert.getText());
+                        animalStartEnergy = Integer.parseInt(animalEnergyInsert.getText());
+                        grassEnergyProfit = Integer.parseInt(grassProfitInsert.getText());
+                        dailyEnergyCost = Integer.parseInt(dailyEnergyCostInsert.getText());
+                        numberOfSpawningAnimals = Integer.parseInt(numberOfSpawningAnimalsInsert.getText());
+                        jungleRatio = Double.parseDouble(jungleRatioInsert.getText());
+                        isMagicalFirst = choiceBoxFirst.getValue();
+                        isMagicalSecond = choiceBoxSecond.getValue();
+                        energyToReproduce = animalStartEnergy / 5;
+                        allMapField = mapHeight * mapWidth;
+                        if(mapWidth <= 0){ throw new IllegalArgumentException("Invalid map width");}
+                        if(mapHeight <= 0){ throw new IllegalArgumentException("Invalid map height");}
+                        if(animalStartEnergy < 0){ throw new IllegalArgumentException("Invalid animalStartEnergy");}
+                        if(jungleRatio < 0){ throw new IllegalArgumentException("Invalid animalStartEnergy");}
+                        if(jungleRatio >1){ throw new IllegalArgumentException("Invalid animalStartEnergy");}
+                    } catch (IllegalArgumentException numberFormatException ) {
+                        container.getChildren().remove(err);
+                        container.getChildren().add(err);
+                        System.out.println("incorrect input format");
+                        return;
+                    }
+                    container.getChildren().remove(err);
+
                     createJungleField();
                     app.startSimulation();
+
             }});
             container.getChildren().add(btn);
 
@@ -162,13 +171,6 @@ public class InitialParameters {
 
     public Scene getScene(){
         return this.insertScene;
-    }
-
-    // Validation of the input data
-    public void validate() throws IllegalArgumentException{
-        if(this.mapWidth <= 0){ throw new IllegalArgumentException("Invalid map width");}
-        if(this.mapHeight <= 0){ throw new IllegalArgumentException("Invalid map height");}
-        if(this.animalStartEnergy < 0){ throw new IllegalArgumentException("Invalid animalStartEnergy");}
     }
 
     // Find any position (Vector2d(x,y)) based on the input data

@@ -5,6 +5,5 @@
   "grassEnergyProfit": 100,
   "dailyEnergyCost": 3,
   "numberOfSpawningAnimals": 30,
-  "jungleRatio": 0.4,
-  "delay": 50
+  "jungleRatio": 0.4
 }

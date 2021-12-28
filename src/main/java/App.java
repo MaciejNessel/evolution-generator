@@ -23,9 +23,7 @@ public class App extends Application {
     private InitialParameters config;
 
     private void newThread( SimulationViewElements simulation){
-        Thread name = new Thread(() ->{
-            simulation.getEngine().run();
-        });
+        Thread name = new Thread((simulation.getEngine()));
         name.start();
     }
 
@@ -37,23 +35,23 @@ public class App extends Application {
 
         GridPane together = new GridPane();
 
-        Button startButtonFirst = new Button("Start 1");
+        Button startButtonFirst = new Button("Start first simulation");
         startButtonFirst.setOnAction(new EventHandler<ActionEvent>(){
             @Override public void handle(ActionEvent e) {
                 if(isStartedFirst){
-                    startButtonFirst.setText("Start 1");
+                    startButtonFirst.setText("Start first simulation");
                     firstSimulation.pauseSimulation();
                     isStartedFirst = false;
                 }
                 else{
-                    startButtonFirst.setText("Pause 1");
+                    startButtonFirst.setText("Pause first simulation");
                     newThread(firstSimulation);
                     isStartedFirst = true;
                 }
 
             }
         });
-        Button saveFirst = new Button("Save 1");
+        Button saveFirst = new Button("Save first to CSV");
         saveFirst.setOnAction(new EventHandler<ActionEvent>(){
             @Override public void handle(ActionEvent e) {
                 try {
@@ -64,7 +62,7 @@ public class App extends Application {
 
             }
         });
-        Button saveSecond = new Button("Save 2");
+        Button saveSecond = new Button("Save second to CSV");
         saveSecond.setOnAction(new EventHandler<ActionEvent>(){
             @Override public void handle(ActionEvent e) {
                 try {
@@ -75,16 +73,16 @@ public class App extends Application {
 
             }
         });
-        Button startButtonSecond = new Button("Start 2");
+        Button startButtonSecond = new Button("Start second simulation");
         startButtonSecond.setOnAction(new EventHandler<ActionEvent>(){
             @Override public void handle(ActionEvent e) {
                 if(isStartedSecond){
-                    startButtonSecond.setText("Start 2");
+                    startButtonSecond.setText("Start second simulation");
                     secondSimulation.pauseSimulation();
                     isStartedSecond = false;
                 }
                 else{
-                    startButtonSecond.setText("Pause 2");
+                    startButtonSecond.setText("Pause second simulation");
                     newThread(secondSimulation);
                     isStartedSecond = true;
                 }
@@ -155,7 +153,7 @@ public class App extends Application {
     }
 
     public void updateMap(HashSet<Vector2d> toUpdate, IWorldMap map){
-        Platform.runLater(() -> {
+        Platform.runLater(()->{
             SimulationViewElements actualSimulation;
             if(this.firstSimulation.getMap() == map){
                 actualSimulation = this.firstSimulation;
@@ -164,7 +162,7 @@ public class App extends Application {
                 actualSimulation = this.secondSimulation;
             }
             actualSimulation.updatePositions(toUpdate);
-            });
+        });
     }
 
 

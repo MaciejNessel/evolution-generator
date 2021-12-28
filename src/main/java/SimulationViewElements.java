@@ -1,4 +1,3 @@
-import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
@@ -6,20 +5,21 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Text;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 public class SimulationViewElements {
     IWorldMap map;
     GridPane mapView;
     Map<Vector2d, Pane> mapViewElements = new HashMap<>();
-    IEngine engine;
+    SimulationEngine engine;
     InitialParameters config;
 
     int day = 0;
-    Text dayCnt;
     VBox animalDetails = new VBox();
     ScrollPane animalDetailsScroll = new ScrollPane();
     Animal selected;
@@ -31,12 +31,12 @@ public class SimulationViewElements {
         this.engine = new SimulationEngine(config, this.map, app);
         this.scale = scale;
         this.mapView = createJungleAndSteppe();
-        this.mapView.setAlignment(Pos.CENTER_RIGHT);
+
 
         animalDetailsScroll.setContent(animalDetails);
 
-        animalDetailsScroll.setMaxWidth(config.mapWidth*scale);
-        animalDetailsScroll.setMinHeight(80);
+        //animalDetailsScroll.setMaxWidth(300);
+        animalDetailsScroll.setMinHeight(100);
 
     }
     public IWorldMap getMap(){
@@ -45,7 +45,7 @@ public class SimulationViewElements {
     public GridPane getMapView(){
         return this.mapView;
     }
-    public IEngine getEngine(){
+    public SimulationEngine getEngine(){
         return this.engine;
     }
 
@@ -68,7 +68,6 @@ public class SimulationViewElements {
                 result.add(actual, j+1, i+1, 1, 1);
             }
         }
-        dayCnt = new Text("Day: 0");
         GridPane together = new GridPane();
         together.add(result, 0, 0);
         together.add(animalDetailsScroll, 0 ,2);
@@ -83,7 +82,6 @@ public class SimulationViewElements {
     public void updatePositions(HashSet<Vector2d> positions){
             update(positions);
             day += 1;
-            dayCnt.setText("Day: "+day);
     }
 
     public void update(HashSet<Vector2d> positions){
@@ -91,6 +89,7 @@ public class SimulationViewElements {
             animalDetails.getChildren().clear();
             animalDetails.getChildren().add(selected.getAnimalInformation());
         }
+
         for(Vector2d position : positions){
             //Clear all elements on map
             this.mapViewElements.get(position).getChildren().clear();
@@ -113,6 +112,7 @@ public class SimulationViewElements {
 
                 this.mapViewElements.get(position).getChildren().add(shape);
                 Animal finalAnimalToView = animalToView;
+
                 shape.setOnMouseClicked(e -> {
                     if(selected!=null){
                         selected.stopFollow();
@@ -120,11 +120,10 @@ public class SimulationViewElements {
                     this.animalDetails.getChildren().clear();
                     this.animalDetails.getChildren().add(l);
                     selected = finalAnimalToView;
+                    selected.startFollow();
                 });
             }
         }
-
-
     }
 
     public void saveToFile() throws IOException {

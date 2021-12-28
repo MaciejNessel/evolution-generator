@@ -47,40 +47,6 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     }
 
     @Override
-    public void getStatistics(){
-        int numOfAnimals = animalsList.size();
-        int numOfGrass = grassMap.size();
-        int childrenCounter = 0;
-        this.avgAnimalEnergy = 0;
-        for(Animal animal : animalsList) {
-            childrenCounter += animal.getChildren().size();
-            this.avgAnimalEnergy += animal.getEnergy();
-        }
-        if(animalsList.size()!=0){
-            this.avgChildren = childrenCounter / animalsList.size();
-            this.avgAnimalEnergy /= animalsList.size();
-        }
-        HashMap<ArrayList<Integer>, Integer> genotypes = new HashMap<>();
-        for(Animal animal : animalsList){
-            ArrayList<Integer> actualGenotype = animal.getGenotype();
-            Integer cnt = genotypes.get(actualGenotype);
-            if(genotypes.get(actualGenotype)!=null){
-                genotypes.remove(actualGenotype);
-                genotypes.put(actualGenotype, cnt+1);
-            }
-            else{
-                genotypes.put(actualGenotype, 1);
-            }
-        }
-        statistics.addDayHistory(new DayHistory(numOfDay, numOfAnimals, numOfGrass, avgAnimalEnergy, avgLiveLengthAnimals, avgChildren));
-    }
-
-    @Override
-    public void saveStatistics() throws IOException {
-        this.statistics.saveStatisticsToFile();
-    }
-
-    @Override
     public void placeAnimal(Animal animal, ArrayList<IPositionChangeObserver> observers) {
         Vector2d position = animal.getPosition();
         if(canPutAnimal(position)){
@@ -182,7 +148,6 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
         if(animalsList.size() == 5 && isMagical && cntOfMagicalUse < 3){
             this.cntOfMagicalUse += 1;
-            System.out.println("MAGIC..............................");
             statistics.magic(cntOfMagicalUse);
             placeAnimalsMagic(animalsList);
         }
@@ -223,8 +188,8 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
                 if(a!=null && b!= null && a.canReproduce() && b.canReproduce()){
                     Animal newAnimal = new Animal(a, b, initialParameters);
                     toReproduce.add(newAnimal);
-                    a.setChild(newAnimal);
-                    b.setChild(newAnimal);
+                    a.setNewChild(newAnimal);
+                    b.setNewChild(newAnimal);
                 }
 
             }
@@ -271,11 +236,6 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         for(Animal a : animalsList){
             a.updateAnimalsEnergy();
         }
-    }
-
-    @Override
-    public String toString(){
-        return new MapView(this, initialParameters).toString();
     }
 
     // It is possible to place an animal if its position fits on the map (or the map has no walls)
@@ -331,9 +291,41 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
 
     @Override
     public VBox getGraph(){
-        return this.statistics.getGaph();
+        return this.statistics.getGraph();
     }
 
+    @Override
+    public void getStatistics(){
+        int numOfAnimals = animalsList.size();
+        int numOfGrass = grassMap.size();
+        int childrenCounter = 0;
+        this.avgAnimalEnergy = 0;
+        for(Animal animal : animalsList) {
+            childrenCounter += animal.getChildren();
+            this.avgAnimalEnergy += animal.getEnergy();
+        }
+        if(animalsList.size()!=0){
+            this.avgChildren = childrenCounter / animalsList.size();
+            this.avgAnimalEnergy /= animalsList.size();
+        }
+        HashMap<ArrayList<Integer>, Integer> genotypes = new HashMap<>();
+        for(Animal animal : animalsList){
+            ArrayList<Integer> actualGenotype = animal.getGenotype();
+            Integer cnt = genotypes.get(actualGenotype);
+            if(genotypes.get(actualGenotype)!=null){
+                genotypes.remove(actualGenotype);
+                genotypes.put(actualGenotype, cnt+1);
+            }
+            else{
+                genotypes.put(actualGenotype, 1);
+            }
+        }
+        statistics.addDayHistory(new DayHistory(numOfDay, numOfAnimals, numOfGrass, avgAnimalEnergy, avgLiveLengthAnimals, avgChildren, genotypes));
+    }
 
+    @Override
+    public void saveStatistics() throws IOException {
+        this.statistics.saveStatisticsToFile();
+    }
 
 }

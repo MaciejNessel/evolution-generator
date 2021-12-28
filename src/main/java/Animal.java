@@ -12,13 +12,18 @@ public class Animal implements IPositionChangeObserver {
     private final Genotype genotype;
     private final InitialParameters initialParameters;
     public ArrayList<IPositionChangeObserver> observerList = new ArrayList<>();
-    private ArrayList<Animal> children = new ArrayList<>();
+
+    //Statistics information
+    private Integer numberOfChildren = 0;
+    private Integer numberOfChildrenStats = 0;
+    private Integer numberOfDescendants = 0;
     private int age = 1;
-    public ArrayList<Integer> a = new ArrayList<>();
 
     private boolean isObserved = false;
     private int deadDay;
     private Label animalInfo = new Label();
+    
+    private Animal grandParent = null;
 
     public Animal(Animal parentA, Animal parentB, InitialParameters initialParameters){
         this.initialParameters = initialParameters;
@@ -29,34 +34,24 @@ public class Animal implements IPositionChangeObserver {
             this.energy = initialParameters.animalStartEnergy;
         }
         else{
+            if(parentA.checkIsObserved()){
+                grandParent = parentA;
+            }
+            if(parentB.checkIsObserved()){
+                grandParent = parentB;
+            }
+            if(parentA.getGrandParent() != null && parentA.getGrandParent().checkIsObserved()){
+                parentA.getGrandParent().setNewDescendant();
+                grandParent = parentA.getGrandParent();
+            }
+            if(parentB.getGrandParent() != null && parentB.getGrandParent().checkIsObserved()){
+                parentB.getGrandParent().setNewDescendant();
+                grandParent = parentB.getGrandParent();
+            }
             this.animalPosition = parentA.getPosition();
             this.energy = updateEnergy(parentA, parentB);
         }
     }
-    //Animal's stathistic
-    public Label getAnimalInformation(){
-        updateStatistic();
-        this.startFollow();
-        return this.animalInfo;
-    }
-
-    public void startFollow(){
-        isObserved = true;
-    }
-
-    private void updateStatistic(){
-        animalInfo.setText("Last position: "+ this.animalPosition + " \nGenotype: " + this.getGenotype() + "\n"
-        + "Number of children: " + children.size() + "\n"
-        + "Dead: " + deadDay);
-    }
-    public void stopFollow(){
-        isObserved = false;
-    }
-    public void setDeath(int deadDay){
-        this.deadDay = deadDay;
-        isObserved = false;
-    }
-
 
     public void changePosition(Vector2d pos){
         this.animalPosition = pos;
@@ -78,21 +73,6 @@ public class Animal implements IPositionChangeObserver {
         this.energy += (int) (grass.getEnergyProfit() / numOfAnimalToFeed);
     }
 
-    // Getters and setters
-    public ArrayList<Integer> getGenotype(){
-        return this.genotype.getGenotype();
-    }
-    public Integer getEnergy(){
-        return this.energy;
-    }
-    public MapDirection getDirection(){
-        return this.animalDirection;
-    }
-    public Vector2d getPosition() {
-        return new Vector2d(this.animalPosition.x, this.animalPosition.y);
-    }
-
-
     // (Observer pattern) - informs all observers about the change of the animal's position
     @Override
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, Animal animal) {
@@ -110,7 +90,6 @@ public class Animal implements IPositionChangeObserver {
     // Moving the animal and changing its position depending on the preferences (depending on its genotype)
     public void move(boolean isWall){
         int thisMove = this.genotype.getMoveByGenotype();
-        a.add(thisMove);
         switch (thisMove){
             case 0-> {
                 Vector2d newAnimalPosition = this.animalPosition.add(this.animalDirection.toVector());
@@ -150,13 +129,87 @@ public class Animal implements IPositionChangeObserver {
         this.age += 1;
     }
 
-    public String toString(){
-        return animalDirection.toString() + animalPosition.toString();
+
+    // Getters and setters
+    public ArrayList<Integer> getGenotype(){
+        return this.genotype.getGenotype();
     }
 
+    public Integer getEnergy(){
+        return this.energy;
+    }
+
+    public MapDirection getDirection(){
+        return this.animalDirection;
+    }
+
+    public Vector2d getPosition() {
+        return new Vector2d(this.animalPosition.x, this.animalPosition.y);
+    }
+
+    public void setNewChild(Animal animal){
+        numberOfChildren += 1;
+        if(isObserved){
+            numberOfChildrenStats+=1;
+            numberOfDescendants+=1;
+        }
+    }
+
+    public void setNewDescendant(){
+        numberOfDescendants += 1;
+    }
+
+    public void setDeath(int deadDay){
+        this.deadDay = deadDay;
+        isObserved = false;
+    }
+
+    public int getAge(){
+        return this.age;
+    }
+
+    public Integer getChildren(){return numberOfChildren;}
+
+
+    // Statistics of a particular animal
+    public void startFollow(){
+        isObserved = true;
+    }
+
+    public void stopFollow(){
+        isObserved = false;
+        numberOfDescendants = 0;
+        numberOfChildrenStats = 0;
+        updateStatistic();
+    }
+
+    public boolean checkIsObserved(){
+        return this.isObserved;
+    }
+
+    public Animal getGrandParent(){
+        return grandParent;
+    }
+
+    private void updateStatistic(){
+        animalInfo.setText("Last position: "+ this.animalPosition + " \nGenotype: " + this.getGenotype() + "\n"
+                + "Number of children: " + numberOfChildrenStats + "\n" + "Number of descendants: " + numberOfDescendants + "\n"
+                + "Dead: " + deadDay);
+        if(deadDay!=0){
+            animalInfo.setTextFill(Color.RED);
+        }
+    }
+
+    //Animal's statistics
+    public Label getAnimalInformation(){
+        updateStatistic();
+        return this.animalInfo;
+    }
+
+
+    //The color of an animal on the map corresponds to its energy
     public Circle view(int scale){
         Color color;
-
         if(0.9 * initialParameters.animalStartEnergy <= this.energy && 1.1 * initialParameters.animalStartEnergy > this.energy){
             color = new Color(0.3, 0.2, 0, 1);
         }
@@ -175,17 +228,8 @@ public class Animal implements IPositionChangeObserver {
         return new Circle((double) (scale/2), color);
     }
 
-    public ArrayList<Animal> getChildren(){return this.children;}
-
-    public int getAge(){
-        return this.age;
+    public String toString(){
+        return animalDirection.toString() + animalPosition.toString();
     }
 
-    public void setChild(Animal animal){
-        this.children.add(animal);
-    }
-
-    public boolean isObserved(){
-        return this.isObserved;
-    }
 }

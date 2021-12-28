@@ -46,7 +46,6 @@ public class Genotype {
         return newGenotype;
     }
 
-
     @Override
     public String toString(){
         return this.genotype.toString();

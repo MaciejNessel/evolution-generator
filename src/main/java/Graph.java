@@ -10,7 +10,7 @@ import javafx.scene.text.Font;
 public class Graph {
 
     private final Statistics statistics;
-    private final LineChart<Number,Number> firstGraph = new LineChart<Number,Number>(new NumberAxis(),new NumberAxis());
+    private final LineChart<Number,Number> graph = new LineChart<Number,Number>(new NumberAxis(),new NumberAxis());
 
     private final XYChart.Series seriesAnimals = new XYChart.Series();
     private final XYChart.Series seriesGrass = new XYChart.Series();
@@ -18,7 +18,8 @@ public class Graph {
     private final XYChart.Series seriesAVGLife = new XYChart.Series();
     private final XYChart.Series seriesAVGChild = new XYChart.Series();
     private final VBox graphBox = new VBox();
-    private Label magicalUse = new Label();
+    private final Label magicalUse = new Label();
+    private final Label mostPopularGenotype = new Label();
 
     public Graph(Statistics stats){
         this.statistics = stats;
@@ -31,7 +32,7 @@ public class Graph {
     }
 
     private void createGraph(){
-        firstGraph.setTitle("Number of grasses and animals");
+        graph.setTitle("Statistics");
 
         seriesAnimals.setName("Number of animals");
         seriesGrass.setName("Number of grass");
@@ -39,29 +40,28 @@ public class Graph {
         seriesAVGLife.setName("AVG life length");
         seriesAVGEnergy.setName("AVG energy");
 
-        firstGraph.getData().add(seriesAnimals);
-        firstGraph.getData().add(seriesGrass);
-        firstGraph.getData().add(seriesAVGLife);
-        firstGraph.getData().add(seriesAVGChild);
-        firstGraph.getData().add(seriesAVGEnergy);
-        firstGraph.setCreateSymbols(false);
-
-        graphBox.getChildren().addAll(firstGraph, magicalUse);
-
+        graph.getData().addAll(seriesAnimals,seriesGrass, seriesAVGLife, seriesAVGChild, seriesAVGEnergy);
+        graph.setCreateSymbols(false);
+        graph.setAnimated(false);
+        graphBox.getChildren().addAll(graph, magicalUse, mostPopularGenotype);
     }
 
     public VBox getGraph(){
         return graphBox;
     }
 
-    public void updateGraph(){
-        seriesAnimals.getData().add(new XYChart.Data(statistics.stats.get(statistics.stats.size()-1).getNumOfDay(), statistics.stats.get(statistics.stats.size()-1).getNumOfAllAnimals()));
-        seriesGrass.getData().add(new XYChart.Data(statistics.stats.get(statistics.stats.size()-1).getNumOfDay(), statistics.stats.get(statistics.stats.size()-1).getNumOfAllGrass()));
-        seriesAVGLife.getData().add(new XYChart.Data(statistics.stats.get(statistics.stats.size()-1).getNumOfDay(), statistics.stats.get(statistics.stats.size()-1).getAvgLifeLength()));
-        seriesAVGChild.getData().add(new XYChart.Data(statistics.stats.get(statistics.stats.size()-1).getNumOfDay(), statistics.stats.get(statistics.stats.size()-1).getAvgOwnedChildren()));
-        seriesAVGEnergy.getData().add(new XYChart.Data(statistics.stats.get(statistics.stats.size()-1).getNumOfDay(), statistics.stats.get(statistics.stats.size()-1).getAvgEnergyOfLivingAnimals()));
+    // Adds new points to the graph based on saved statistics from the simulation
+    public void updateChart(){
+        Integer numOfDay = statistics.lastDayHistory().getNumOfDay();
+        seriesAnimals.getData().add(new XYChart.Data(numOfDay, statistics.lastDayHistory().getNumOfAllAnimals()));
+        seriesGrass.getData().add(new XYChart.Data(numOfDay, statistics.lastDayHistory().getNumOfAllGrass()));
+        seriesAVGLife.getData().add(new XYChart.Data(numOfDay, statistics.lastDayHistory().getAvgLifeLength()));
+        seriesAVGChild.getData().add(new XYChart.Data(numOfDay, statistics.lastDayHistory().getAvgOwnedChildren()));
+        seriesAVGEnergy.getData().add(new XYChart.Data(numOfDay, statistics.lastDayHistory().getAvgEnergyOfLivingAnimals()));
+        mostPopularGenotype.setText("Actual dominant genotype: "+statistics.lastDayHistory().getMostPopularGenotype().toString());
     }
 
+    // During magic mode it shows information in the interface about the next use
     public void magic(int number){
         Platform.runLater(()->magicalUse.setText("MAGIC NUMBER:"+number));
     }
