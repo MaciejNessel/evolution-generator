@@ -1,6 +1,6 @@
 
 ### Intellij ###
-
+.idea
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml
@@ -80,7 +80,6 @@ atlassian-ide-plugin.xml
 *.ctxt
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
