@@ -125,7 +125,6 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
         }
     }
 
-
     @Override
     public void removeDeathAnimal(){
         for(Vector2d key : animalMap.keySet()){
@@ -249,7 +248,6 @@ public class AbstractWorldMap implements IWorldMap, IPositionChangeObserver{
     }
 
     // Number of fields occupied by animals
-    //TODO
     private int getNumberOfOccupiedFields(boolean isJungle){
         int cnt = 0;
         for(int i = 0; i<this.initialParameters.mapHeight; i++){

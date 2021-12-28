@@ -21,7 +21,8 @@ public class Grass {
     public String toString(){
         return "*";
     }
+
     public Circle view(int scale){
-        return new Circle((double) (scale/2), Color.GREENYELLOW);
+        return new Circle((double)  Math.max((scale/2), 1), Color.GREENYELLOW);
     }
 }

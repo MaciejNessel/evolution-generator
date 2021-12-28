@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class SimulationEngine implements Runnable{
     private boolean isStarted = false;
@@ -14,13 +16,33 @@ public class SimulationEngine implements Runnable{
         this.putFirstAnimalsOnMap(initialParameters.numberOfSpawningAnimals);
         this.map.placeGrass();
         this.app = app;
-        app.updateMap(map.getToUpdate(), map);
+        Map<Vector2d, Object> toUpdate = createToUpdate(map.getToUpdate());
+        app.updateMap(toUpdate, map);
     }
 
     private void putFirstAnimalsOnMap(int cnt){
         for(int i = 0; i<cnt; i++){
             this.map.placeAnimal(new Animal(null, null, initialParameters), observers);
         }
+    }
+
+    private Map<Vector2d, Object>  createToUpdate(HashSet<Vector2d> toUpdate){
+        Map<Vector2d, Object> toUpdateNew = new HashMap<>();
+        for(Vector2d position : toUpdate){
+            if(map.animalsAt(position)!=null && map.animalsAt(position).size()>0){
+                Animal toInsert = null;
+                for(Animal animal : map.animalsAt(position)){
+                    if(toInsert == null || animal.getEnergy()>toInsert.getEnergy()){
+                        toInsert = animal;
+                    }
+                }
+                toUpdateNew.put(position, toInsert);
+            }
+            else{
+                toUpdateNew.put(position, map.grassAt(position));
+            }
+        }
+        return toUpdateNew;
     }
 
     @Override
@@ -32,20 +54,19 @@ public class SimulationEngine implements Runnable{
             map.eating();
             map.removeDeathAnimal();
             if(!map.moveAnimals()){
-                app.updateMap(map.getToUpdate(), map);
-                System.out.println("END");
+                this.isStarted = false;
                 break;
             }
             map.animalReproduction(observers);
             map.placeGrass();
-            HashSet<Vector2d> toUpdate = new HashSet<>(map.getToUpdate());
+            Map<Vector2d, Object> toUpdate = createToUpdate(map.getToUpdate());
             app.updateMap(toUpdate, map);
+            map.clearUpdate();
             try {
-                Thread.sleep(5);
+                Thread.sleep(50);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            map.clearUpdate();
         }
     }
 

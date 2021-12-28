@@ -7,9 +7,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class SimulationViewElements {
@@ -31,11 +29,7 @@ public class SimulationViewElements {
         this.engine = new SimulationEngine(config, this.map, app);
         this.scale = scale;
         this.mapView = createJungleAndSteppe();
-
-
         animalDetailsScroll.setContent(animalDetails);
-
-        //animalDetailsScroll.setMaxWidth(300);
         animalDetailsScroll.setMinHeight(100);
 
     }
@@ -49,15 +43,13 @@ public class SimulationViewElements {
         return this.engine;
     }
 
-
-
     private GridPane createJungleAndSteppe(){
         GridPane result = new GridPane();
         for(int i = 0; i<this.config.mapHeight; i++){
             for(int j = 0; j<this.config.mapWidth; j++){
                 StackPane actual = new StackPane();
 
-                actual.setMinSize(scale, scale);
+                actual.setMinSize(Math.max(scale, 2), Math.max(scale, 2));
                 if(this.config.isPositionInJungle(new Vector2d(j, i))){
                     actual.setStyle("-fx-background-color: #004D00FF;");
                 }
@@ -79,51 +71,36 @@ public class SimulationViewElements {
         this.engine.pause();
     }
 
-    public void updatePositions(HashSet<Vector2d> positions){
-            update(positions);
-            day += 1;
-    }
-
-    public void update(HashSet<Vector2d> positions){
+    public void updatePositions(Map<Vector2d, Object> positions){
         if (selected != null){
             animalDetails.getChildren().clear();
             animalDetails.getChildren().add(selected.getAnimalInformation());
         }
-
-        for(Vector2d position : positions){
-            //Clear all elements on map
-            this.mapViewElements.get(position).getChildren().clear();
-
-            ArrayList<Animal> animals = this.map.animalsAt(position);
-            Grass grass = this.map.grassAt(position);
-
-            if(grass!=null && (animals == null || animals.size()==0)){
-                this.mapViewElements.get(position).getChildren().add(grass.view(scale));
+        for(Map.Entry<Vector2d, Object> entry : positions.entrySet()){
+            Vector2d position = entry.getKey();
+            Object object = entry.getValue();
+            if(object == null){
+                this.mapViewElements.get(position).getChildren().clear();
             }
-            if(animals != null && animals.size()>0){
-                Animal animalToView = animals.get(0);
-                for(Animal animal : animals){
-                    if(animal.getEnergy() > animalToView.getEnergy()){
-                        animalToView = animal;
-                    }
-                }
+            else if(object instanceof Animal animalToView){
                 Circle shape = animalToView.view(scale);
                 Label l = animalToView.getAnimalInformation();
-
                 this.mapViewElements.get(position).getChildren().add(shape);
-                Animal finalAnimalToView = animalToView;
-
                 shape.setOnMouseClicked(e -> {
                     if(selected!=null){
                         selected.stopFollow();
                     }
                     this.animalDetails.getChildren().clear();
                     this.animalDetails.getChildren().add(l);
-                    selected = finalAnimalToView;
+                    selected = animalToView;
                     selected.startFollow();
                 });
             }
+            else if(object instanceof Grass grass){
+                this.mapViewElements.get(position).getChildren().add(grass.view(scale));
+            }
         }
+            day += 1;
     }
 
     public void saveToFile() throws IOException {

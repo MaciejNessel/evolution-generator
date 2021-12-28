@@ -5,6 +5,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
@@ -12,7 +13,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.Map;
 
 public class App extends Application {
     private boolean isStartedFirst = false;
@@ -28,7 +29,7 @@ public class App extends Application {
     }
 
     public void startSimulation(){
-        int scale = Math.max(1,300 / (Math.max(config.mapHeight, config.mapWidth) + 1));
+        int scale = Math.max(1, 300 / (Math.max(config.mapHeight, config.mapWidth) + 1));
 
         this.firstSimulation = new SimulationViewElements(new AbstractWorldMap(config, false, config.isMagicalFirst), config, this, scale);
         this.secondSimulation = new SimulationViewElements(new AbstractWorldMap(config, true, config.isMagicalSecond), config, this, scale);
@@ -103,23 +104,24 @@ public class App extends Application {
                 newInsert();
             }
         });
-
-        together.add(firstSimulation.getMapView(), 0,0);
-        together.add(secondSimulation.getMapView(), 0, 1);
+        together.add(new Label("Map without wall:"), 0, 0);
+        together.add(firstSimulation.getMapView(), 0,1);
+        together.add(new Label("Map with wall:"), 0, 2);
+        together.add(secondSimulation.getMapView(), 0, 3);
         VBox firstButtons = new VBox(startButtonFirst, saveFirst);
-        together.add(firstButtons, 1, 0);
+        together.add(firstButtons, 1, 1);
         firstButtons.setAlignment(Pos.CENTER);
         VBox secondButtons = new VBox(startButtonSecond, saveSecond);
         secondButtons.setAlignment(Pos.CENTER);
-        together.add(secondButtons, 1, 1);
+        together.add(secondButtons, 1, 3);
         VBox firstGraph = firstSimulation.getMap().getGraph();
         firstGraph.setMaxHeight(350);
         VBox secondGraph = secondSimulation.getMap().getGraph();
         secondGraph.setMaxHeight(350);
-        together.add(firstGraph, 2, 0);
+        together.add(firstGraph, 2, 1);
 
         firstGraph.setMinWidth(800);
-        together.add(secondGraph, 2, 1);
+        together.add(secondGraph, 2, 3);
         VBox buttonRestart = new VBox(restartButton);
 
         together.addColumn(3, buttonRestart);
@@ -152,7 +154,7 @@ public class App extends Application {
         primaryStage.show();
     }
 
-    public void updateMap(HashSet<Vector2d> toUpdate, IWorldMap map){
+    public void updateMap(Map<Vector2d, Object> toUpdate, IWorldMap map){
         Platform.runLater(()->{
             SimulationViewElements actualSimulation;
             if(this.firstSimulation.getMap() == map){
@@ -164,6 +166,4 @@ public class App extends Application {
             actualSimulation.updatePositions(toUpdate);
         });
     }
-
-
 }

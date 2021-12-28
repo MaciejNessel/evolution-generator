@@ -206,7 +206,6 @@ public class Animal implements IPositionChangeObserver {
         return this.animalInfo;
     }
 
-
     //The color of an animal on the map corresponds to its energy
     public Circle view(int scale){
         Color color;
@@ -225,7 +224,7 @@ public class Animal implements IPositionChangeObserver {
         else{
             color = new Color(0.8, 0.4, 0, 1);
         }
-        return new Circle((double) (scale/2), color);
+        return new Circle((double) Math.max((scale/2), 1), color);
     }
 
     public String toString(){

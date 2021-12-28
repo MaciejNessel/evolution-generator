@@ -1,7 +1,7 @@
 {
   "mapWidth": 15,
   "mapHeight": 15,
-  "animalStartEnergy": 100,
+  "animalStartEnergy": 150,
   "grassEnergyProfit": 100,
   "dailyEnergyCost": 3,
   "numberOfSpawningAnimals": 30,
